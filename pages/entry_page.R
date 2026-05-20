@@ -65,7 +65,17 @@ entry_ui <- function() {
             br(),
             br(),
             
-            uiOutput("source_download")
+            uiOutput("source_download"),
+            
+            br(),
+            br(),
+            
+            uiOutput("rna_download"),
+            
+            br(),
+            br(),
+            
+            uiOutput("plot_download")
           )
         ),
         
@@ -631,21 +641,69 @@ entry_server <- function(
   
   # ===== DOWNLOAD BUTTONS =====
   
+  # ---------------------------------
+  # FULL DATASET
+  # ---------------------------------
+  
   output$prediction_download <- renderUI({
     
     tags$a(
       href =
-        current_entry()$prediction_download[1],
+        current_entry()$full_dataset_download[1],
       
       target = "_blank",
       
       class = "btn btn-primary",
       
-      "Download Prediction Data"
+      style = "
+      background:#0F766E;
+      border:none;
+      border-radius:18px;
+      padding:18px 30px;
+      font-size:20px;
+      font-weight:600;
+      width:100%;
+      margin-bottom:20px;
+    ",
+      
+      "Download Full Dataset"
     )
   })
   
+  # ---------------------------------
+  # INDIVIDUAL TISSUE DATASET
+  # ---------------------------------
+  
   output$source_download <- renderUI({
+    
+    tags$a(
+      href =
+        current_entry()$individual_download[1],
+      
+      target = "_blank",
+      
+      class = "btn btn-secondary",
+      
+      style = "
+      background:#164E63;
+      border:none;
+      border-radius:18px;
+      padding:18px 30px;
+      font-size:20px;
+      font-weight:600;
+      width:100%;
+      margin-bottom:20px;
+    ",
+      
+      "Download Individual Tissue Dataset"
+    )
+  })
+  
+  # ---------------------------------
+  # SOURCE RNA DATA
+  # ---------------------------------
+  
+  output$rna_download <- renderUI({
     
     tags$a(
       href =
@@ -655,7 +713,46 @@ entry_server <- function(
       
       class = "btn btn-secondary",
       
-      "Download Source Data"
+      style = "
+      background:#1E3A8A;
+      border:none;
+      border-radius:18px;
+      padding:18px 30px;
+      font-size:20px;
+      font-weight:600;
+      width:100%;
+      margin-bottom:20px;
+    ",
+      
+      "Download Source RNA Data"
+    )
+  })
+  
+  # ---------------------------------
+  # PCA / PLOT DATA
+  # ---------------------------------
+  
+  output$plot_download <- renderUI({
+    
+    tags$a(
+      href =
+        current_entry()$plot_download[1],
+      
+      target = "_blank",
+      
+      class = "btn btn-secondary",
+      
+      style = "
+      background:#334155;
+      border:none;
+      border-radius:18px;
+      padding:18px 30px;
+      font-size:20px;
+      font-weight:600;
+      width:100%;
+    ",
+      
+      "Download PCA / Plot Data"
     )
   })
 }
