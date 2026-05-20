@@ -7,6 +7,10 @@ body {
     sans-serif;
 }
 
+/* =========================================
+NAVBAR
+========================================= */
+
 .navbar {
   
   background:
@@ -39,6 +43,153 @@ body {
   font-weight: 600 !important;
 }
 
+/* =========================================
+HOME HERO SECTION
+========================================= */
+
+.hero-section {
+  
+  background:
+    linear-gradient(
+      135deg,
+      #0F766E 0%,
+      #164E63 100%
+    );
+  
+  border-radius: 45px;
+  
+  padding-top: 90px;
+  
+  padding-bottom: 90px;
+  
+  padding-left: 60px;
+  
+  padding-right: 60px;
+  
+  margin-top: 35px;
+  
+  margin-bottom: 45px;
+  
+  text-align: center;
+  
+  color: white;
+  
+  min-height: 520px;
+  
+  display: flex;
+  
+  flex-direction: column;
+  
+  justify-content: center;
+}
+
+.hero-title {
+  
+  font-size: 82px;
+  
+  font-weight: 900;
+  
+  margin-bottom: 20px;
+}
+
+.hero-subtitle {
+  
+  font-size: 34px;
+  
+  font-weight: 500;
+  
+  margin-bottom: 35px;
+}
+
+.hero-text {
+  
+  font-size: 24px;
+  
+  line-height: 1.8;
+  
+  max-width: 1100px;
+  
+  margin: 0 auto;
+}
+
+/* =========================================
+MAIN BUTTON
+========================================= */
+
+.main-button {
+  
+  background:
+    linear-gradient(
+      135deg,
+      #0B4F6C 0%,
+      #164E63 100%
+    ) !important;
+  
+  color: white !important;
+  
+  border: none !important;
+  
+  border-radius: 18px !important;
+  
+  padding: 18px 42px !important;
+  
+  font-size: 24px !important;
+  
+  font-weight: 700 !important;
+  
+  box-shadow:
+    0 8px 22px rgba(0,0,0,0.18) !important;
+  
+  transition:
+    all 0.2s ease;
+}
+
+.main-button:hover {
+  
+  transform:
+    translateY(-2px);
+}
+
+/* =========================================
+STAT CARDS
+========================================= */
+
+.stat-card {
+  
+  background: white;
+  
+  border-radius: 35px;
+  
+  padding: 35px;
+  
+  text-align: center;
+  
+  box-shadow:
+    0 10px 35px rgba(0,0,0,0.06);
+  
+  min-height: 220px;
+}
+
+.stat-card h1 {
+  
+  font-size: 72px;
+  
+  font-weight: 800;
+  
+  color: #1E293B;
+}
+
+.stat-card h3 {
+  
+  font-size: 32px;
+  
+  color: #1E293B;
+}
+
+/* =========================================
+FEATURE CARDS
+========================================= */
+
 .feature-card {
   
   background: white;
@@ -49,7 +200,31 @@ body {
   
   box-shadow:
     0 10px 35px rgba(0,0,0,0.06);
+  
+  min-height: 500px;
 }
+
+.feature-card h3 {
+  
+  font-size: 34px;
+  
+  font-weight: 700;
+  
+  margin-top: 15px;
+}
+
+.feature-card p {
+  
+  font-size: 20px;
+  
+  line-height: 1.7;
+  
+  color: #334155;
+}
+
+/* =========================================
+SEARCH BUTTON
+========================================= */
 
 .search-btn {
   
@@ -89,10 +264,9 @@ body {
     0 14px 30px rgba(15,118,110,0.35) !important;
 }
 
-.dataTables_wrapper {
-  
-  font-size: 17px;
-}
+/* =========================================
+ENTRY LINKS
+========================================= */
 
 .entry-link {
   
@@ -108,33 +282,11 @@ body {
   color: #14B8A6 !important;
 }
 
-.hero-section {
-  
-  background:
-    linear-gradient(
-      135deg,
-      #0F766E 0%,
-      #164E63 100%
-    );
-  
-  border-radius: 42px;
-  
-  padding: 32px 50px;
-  
-  margin-top: 20px;
-  
-  margin-bottom: 35px;
-  
-  text-align: center;
-  
-  color: white;
-  
-  box-shadow:
-    0 12px 40px rgba(0,0,0,0.12);
+/* =========================================
+DATATABLES
+========================================= */
 
-  max-width: 1200px;
-
-  margin-left: auto;
-
-  margin-right: auto;
+.dataTables_wrapper {
+  
+  font-size: 17px;
 }
