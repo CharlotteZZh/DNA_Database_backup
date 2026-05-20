@@ -1,0 +1,140 @@
+body {
+  
+  background: #F1F5F9 !important;
+  
+  font-family:
+    Inter,
+    sans-serif;
+}
+
+.navbar {
+  
+  background:
+    linear-gradient(
+      135deg,
+      #0F766E 0%,
+      #164E63 100%
+    ) !important;
+  
+  border: none !important;
+  
+  padding: 10px 25px;
+}
+
+.navbar-brand {
+  
+  color: white !important;
+  
+  font-size: 34px !important;
+  
+  font-weight: 800 !important;
+}
+
+.navbar-nav > li > a {
+  
+  color: white !important;
+  
+  font-size: 20px !important;
+  
+  font-weight: 600 !important;
+}
+
+.feature-card {
+  
+  background: white;
+  
+  border-radius: 35px;
+  
+  padding: 35px;
+  
+  box-shadow:
+    0 10px 35px rgba(0,0,0,0.06);
+}
+
+.search-btn {
+  
+  background: linear-gradient(
+    135deg,
+    #0F766E 0%,
+    #14B8A6 100%
+  ) !important;
+  
+  color: white !important;
+  
+  border: none !important;
+  
+  border-radius: 20px !important;
+  
+  padding: 20px 36px !important;
+  
+  font-size: 24px !important;
+  
+  font-weight: 700 !important;
+  
+  width: 100% !important;
+  
+  box-shadow:
+    0 10px 25px rgba(15,118,110,0.25) !important;
+  
+  transition:
+    all 0.2s ease;
+}
+
+.search-btn:hover {
+  
+  transform:
+    translateY(-2px);
+  
+  box-shadow:
+    0 14px 30px rgba(15,118,110,0.35) !important;
+}
+
+.dataTables_wrapper {
+  
+  font-size: 17px;
+}
+
+.entry-link {
+  
+  color: #0F766E !important;
+  
+  font-weight: 700;
+  
+  text-decoration: none !important;
+}
+
+.entry-link:hover {
+  
+  color: #14B8A6 !important;
+}
+
+.hero-section {
+  
+  background:
+    linear-gradient(
+      135deg,
+      #0F766E 0%,
+      #164E63 100%
+    );
+  
+  border-radius: 42px;
+  
+  padding: 32px 50px;
+  
+  margin-top: 20px;
+  
+  margin-bottom: 35px;
+  
+  text-align: center;
+  
+  color: white;
+  
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.12);
+
+  max-width: 1200px;
+
+  margin-left: auto;
+
+  margin-right: auto;
+}
