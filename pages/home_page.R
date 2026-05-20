@@ -216,6 +216,91 @@ home_ui <- function() {
           )
         )
       )
+    ),
+    
+    br(),
+    br(),
+    
+    # ===== PUBLICATIONS =====
+    
+    div(
+      class = "feature-card",
+      
+      h2("Publications"),
+      
+      br(),
+      
+      tags$ol(
+        
+        style = "
+      font-size:18px;
+      line-height:1.9;
+    ",
+        
+        tags$li(
+          
+          HTML(
+            "
+        Huang, X.&#8224;,
+        Liu, Q.&#8224;,
+        Zhao, Y.,
+        Tang, X.,
+        Zhou, Y.* and
+        Hou, W.*.
+        2025.
+        "
+          ),
+          
+          tags$a(
+            
+            href = "https://www.biorxiv.org/content/biorxiv/early/2025/02/08/2025.02.05.636730.full.pdf",
+            
+            target = "_blank",
+            
+            style = "
+          font-style:italic;
+          color:#0F172A;
+          font-weight:500;
+          text-decoration:none;
+        ",
+            
+            "MethylProphet: A Generalized Gene-Contextual Model for Inferring Whole-Genome DNA Methylation Landscape."
+          ),
+          
+          HTML(
+            "
+        Model: MethylProphet.
+        Accepted by
+        "
+          ),
+          
+          tags$a(
+            
+            href = "https://iclr.cc/",
+            
+            target = "_blank",
+            
+            "ICLR 2026"
+          ),
+          
+          HTML(
+            "
+        .
+        "
+          ),
+          
+          tags$a(
+            
+            href = "https://openreview.net/forum?id=8wQ7Oc08vo",
+            
+            target = "_blank",
+            
+            "OpenReview"
+          ),
+          
+          HTML(".")
+        )
+      )
     )
   )
 }
