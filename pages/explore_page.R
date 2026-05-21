@@ -14,7 +14,9 @@ explore_ui <- function() {
       
       fluidRow(
         
-        # ===== LEFT FILTER PANEL =====
+        # =====================================
+        # LEFT FILTER PANEL
+        # =====================================
         
         column(
           width = 3,
@@ -90,7 +92,9 @@ explore_ui <- function() {
           )
         ),
         
-        # ===== RIGHT TABLE =====
+        # =====================================
+        # RIGHT RESULTS TABLE
+        # =====================================
         
         column(
           width = 9,
@@ -123,6 +127,10 @@ explore_server <- function(
     selected_entry
 ) {
   
+  # =====================================
+  # LOAD METADATA
+  # =====================================
+  
   metadata <- reactive({
     
     read.csv(
@@ -131,7 +139,9 @@ explore_server <- function(
     )
   })
   
-  # ===== POPULATE FILTERS =====
+  # =====================================
+  # POPULATE FILTERS
+  # =====================================
   
   observe({
     
@@ -161,15 +171,10 @@ explore_server <- function(
       session,
       "tissue_filter",
       choices = c(
-        
         "All",
-        
         sort(
-          
           unique(
-            
             trimws(
-              
               tools::toTitleCase(
                 tolower(df$tissue)
               )
@@ -201,7 +206,9 @@ explore_server <- function(
     )
   })
   
-  # ===== FILTER DATA =====
+  # =====================================
+  # FILTER DATA
+  # =====================================
   
   filtered_data <- eventReactive(
     
@@ -259,17 +266,36 @@ explore_server <- function(
     ignoreNULL = FALSE
   )
   
-  # ===== RESULTS TABLE =====
+  # =====================================
+  # RESULTS TABLE
+  # =====================================
   
   output$results_table <- renderDT({
     
     df <- filtered_data()
     
+    # ---------------------------------
+    # CREATE CLICKABLE UNIQUE LINKS
+    # ---------------------------------
+    
+    df$link_id <- df$entry_id
+    
     df$entry_name <- paste0(
-      '<a href="#" class="entry-link">',
+      
+      '<a href="#" class="entry-link" data-id="',
+      
+      df$link_id,
+      
+      '">',
+      
       df$entry_name,
+      
       '</a>'
     )
+    
+    # ---------------------------------
+    # DISPLAY TABLE
+    # ---------------------------------
     
     display_df <- df[
       ,
@@ -303,13 +329,11 @@ explore_server <- function(
         "
         table.on('click', 'a.entry-link', function() {
           
-          var data = table.row(
-            $(this).parents('tr')
-          ).data();
+          var clicked_id = $(this).data('id');
           
           Shiny.setInputValue(
             'selected_entry',
-            data[0],
+            clicked_id,
             {priority: 'event'}
           );
         });
@@ -318,7 +342,9 @@ explore_server <- function(
     )
   })
   
-  # ===== CLICK ENTRY =====
+  # =====================================
+  # OPEN ENTRY PAGE
+  # =====================================
   
   observeEvent(
     
@@ -326,16 +352,10 @@ explore_server <- function(
     
     {
       
-      clicked_entry <- gsub(
-        "<.*?>",
-        "",
-        input$selected_entry
-      )
-      
-      clicked_row <- filtered_data()[
+      clicked_row <- metadata()[
         
-        filtered_data()$entry_name ==
-          clicked_entry,
+        metadata()$entry_id ==
+          input$selected_entry,
         
       ][1, ]
       
