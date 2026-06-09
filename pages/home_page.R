@@ -1,5 +1,135 @@
 library(shiny)
 
+format_count <- function(x) {
+  
+  if (is.na(x)) {
+    
+    return("NA")
+  }
+  
+  if (x >= 1e6) {
+    
+    return(
+      paste0(
+        round(
+          x / 1e6,
+          1
+        ),
+        "M"
+      )
+    )
+  }
+  
+  format(
+    x,
+    big.mark = ",",
+    scientific = FALSE
+  )
+}
+
+normalize_home_tissue <- function(x) {
+  
+  x <- trimws(
+    tolower(
+      gsub(
+        "_",
+        " ",
+        x
+      )
+    )
+  )
+  
+  x[x != ""]
+}
+
+home_stats <- function(metadata_path = "data/metadata.csv") {
+  
+  df <- read.csv(
+    metadata_path,
+    stringsAsFactors = FALSE
+  )
+  
+  numeric_column <- function(column_name) {
+    
+    suppressWarnings(
+      as.numeric(
+        df[[column_name]]
+      )
+    )
+  }
+  
+  list(
+    list(
+      value = format_count(
+        length(
+          unique(
+            df$dataset[df$dataset != ""]
+          )
+        )
+      ),
+      label = "Datasets"
+    ),
+    list(
+      value = format_count(
+        nrow(df)
+      ),
+      label = "Entries"
+    ),
+    list(
+      value = format_count(
+        length(
+          unique(
+            normalize_home_tissue(df$tissue)
+          )
+        )
+      ),
+      label = "Tissues"
+    ),
+    list(
+      value = format_count(
+        sum(
+          numeric_column("n_level3"),
+          na.rm = TRUE
+        )
+      ),
+      label = "Level-3 Cell Types"
+    ),
+    list(
+      value = format_count(
+        max(
+          numeric_column("n_cpgs"),
+          na.rm = TRUE
+        )
+      ),
+      label = "Max CpGs"
+    ),
+    list(
+      value = format_count(
+        sum(
+          numeric_column("n_samples"),
+          na.rm = TRUE
+        )
+      ),
+      label = "Known Samples"
+    )
+  )
+}
+
+stat_card <- function(stat) {
+  
+  column(
+    2,
+    
+    div(
+      class = "stat-card",
+      
+      h1(stat$value),
+      
+      h3(stat$label)
+    )
+  )
+}
+
 home_ui <- function() {
   
   fluidPage(
@@ -53,77 +183,9 @@ home_ui <- function() {
     # ===== STATS =====
     
     fluidRow(
-      
-      column(
-        2,
-        
-        div(
-          class = "stat-card",
-          
-          h1("5"),
-          
-          h3("Datasets")
-        )
-      ),
-      
-      column(
-        2,
-        
-        div(
-          class = "stat-card",
-          
-          h1("17"),
-          
-          h3("Tissues")
-        )
-      ),
-      
-      column(
-        2,
-        
-        div(
-          class = "stat-card",
-          
-          h1("337+"),
-          
-          h3("Cell Types")
-        )
-      ),
-      
-      column(
-        2,
-        
-        div(
-          class = "stat-card",
-          
-          h1("28M+"),
-          
-          h3("CpGs")
-        )
-      ),
-      
-      column(
-        2,
-        
-        div(
-          class = "stat-card",
-          
-          h1("5000+"),
-          
-          h3("Samples")
-        )
-      ),
-      
-      column(
-        2,
-        
-        div(
-          class = "stat-card",
-          
-          h1("20"),
-          
-          h3("Spatial Slides")
-        )
+      lapply(
+        home_stats(),
+        stat_card
       )
     ),
     
