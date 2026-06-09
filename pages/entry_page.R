@@ -1,6 +1,9 @@
 library(shiny)
 library(plotly)
 
+# PCA render helpers (build_type_pca / build_variance) live in
+# pages/pca_page.R and are sourced by app.R.
+
 entry_ui <- function() {
   
   fluidPage(
@@ -228,77 +231,75 @@ entry_server <- function(
   })
   
   # ===== DETECT AVAILABLE FILES =====
-  
-  has_pca <- reactive({
-    
-    path <- current_entry()$pca_path[1]
-    
-    !is.na(path) &&
+
+  path_ok <- function(path) {
+    !is.null(path) &&
+      length(path) == 1 &&
+      !is.na(path) &&
       path != "" &&
       file.exists(path)
-    
-  })
-  
-  has_umap <- reactive({
-    
-    path <- current_entry()$umap_path[1]
-    
-    !is.na(path) &&
-      path != "" &&
-      file.exists(path)
-    
-  })
+  }
+
+  has_pred  <- reactive(path_ok(current_entry()$pca_predicted_path[1]))
+  has_gold  <- reactive(path_ok(current_entry()$pca_gold_path[1]))
+  has_input <- reactive(path_ok(current_entry()$pca_input_path[1]))
+
+  has_umap  <- reactive(path_ok(current_entry()$umap_path[1]))
+
+  entry_group <- reactive(current_entry()$pca_group[1])
   
   # ===== DYNAMIC TABS =====
-  
+
   output$dynamic_tabs <- renderUI({
-    
-    tabs <- list()
-    
-    # PCA TAB
-    
-    if (has_pca()) {
-      
-      tabs <- append(
-        tabs,
-        
-        list(
-          
-          tabPanel(
-            "PCA",
-            
-            br(),
-            
-            plotlyOutput(
-              "entry_pca",
-              height = "500px"
-            ),
-            
-            br(),
-            
-            plotlyOutput(
-              "variance_plot",
-              height = "300px"
-            )
-          )
-        )
+
+    # Placeholder shown inside a subtab when its data file is missing.
+    empty_panel <- function(label) {
+      div(
+        style = "
+          padding:60px 20px;
+          text-align:center;
+          color:#64748B;
+          font-size:18px;
+        ",
+        paste0("No ", label, " data available for this dataset yet.")
       )
     }
-    
-    # UMAP TAB
-    
+
+    # A PCA subtab: interactive plot + variance curve when the file exists,
+    # otherwise the named-but-empty placeholder.
+    pca_tab <- function(label, available, plot_id, var_id) {
+      tabPanel(
+        label,
+        br(),
+        if (available) {
+          tagList(
+            plotlyOutput(plot_id, height = "500px"),
+            br(),
+            plotlyOutput(var_id, height = "280px")
+          )
+        } else {
+          empty_panel(label)
+        }
+      )
+    }
+
+    # PCA TABS -- always present (Input, Output/Predicted, Gold)
+
+    tabs <- list(
+      pca_tab("Input RNA",          has_input(), "entry_pca_input", "var_input"),
+      pca_tab("Predicted DNAm",     has_pred(),  "entry_pca_pred",  "var_pred"),
+      pca_tab("Gold-standard DNAm", has_gold(),  "entry_pca_gold",  "var_gold")
+    )
+
+    # UMAP TAB (only when present)
+
     if (has_umap()) {
-      
       tabs <- append(
         tabs,
-        
         list(
-          
           tabPanel(
             "UMAP",
-            
             br(),
-            
             plotlyOutput(
               "entry_umap",
               height = "500px"
@@ -307,303 +308,84 @@ entry_server <- function(
         )
       )
     }
-    
-    # STATIC PDF
-    
+
+    # STATIC PLOT TAB -- always present
+
     plot_path <- current_entry()$plot_path[1]
-    
-    if (
+    has_static <- !is.null(plot_path) &&
       !is.na(plot_path) &&
       plot_path != ""
-    ) {
-      
-      tabs <- append(
-        tabs,
-        
-        list(
-          
-          tabPanel(
-            "Static Plot",
-            
-            br(),
-            
+
+    tabs <- append(
+      tabs,
+      list(
+        tabPanel(
+          "Static Plot",
+          br(),
+          if (has_static) {
             tags$iframe(
               src = plot_path,
               width = "100%",
               height = "900px",
               style = "border:none;"
             )
-          )
+          } else {
+            empty_panel("Static plot")
+          }
         )
       )
-    }
-    
+    )
+
     do.call(
       tabsetPanel,
       tabs
     )
   })
   
-  # ===== PCA =====
-  
-  output$entry_pca <- renderPlotly({
-    
-    req(has_pca())
-    
-    pca_obj <- readRDS(
-      current_entry()$pca_path[1]
+  # ===== PCA (one renderer per available data type) =====
+
+  output$entry_pca_pred <- renderPlotly({
+    req(has_pred())
+    build_type_pca(
+      current_entry()$pca_predicted_path[1],
+      entry_group(),
+      "Predicted DNAm \u2014 PCA"
     )
-    
-    # =========================
-    # CASE 1: DATA FRAME PCA
-    # =========================
-    
-    if (is.data.frame(pca_obj)) {
-      
-      colnames(pca_obj)[1:2] <- c(
-        "PC1",
-        "PC2"
-      )
-      
-      # ---------- SAFE METADATA ----------
-      
-      if (!"name" %in% colnames(pca_obj)) {
-        
-        if ("rownames" %in% colnames(pca_obj)) {
-          
-          pca_obj$name <- pca_obj$rownames
-          
-        } else {
-          
-          pca_obj$name <- rownames(pca_obj)
-        }
-      }
-      
-      if (!"database" %in% colnames(pca_obj)) {
-        pca_obj$database <- "Dataset"
-      }
-      
-      # ---------- BIOLOGICAL COLOR GROUP ----------
-      
-      pca_obj$group <- if (
-        "celltype" %in% colnames(pca_obj)
-      ) {
-        pca_obj$celltype
-        
-      } else if (
-        "generaltissue" %in% colnames(pca_obj)
-      ) {
-        pca_obj$generaltissue
-        
-      } else if (
-        "type" %in% colnames(pca_obj)
-      ) {
-        pca_obj$type
-        
-      } else if (
-        "ct" %in% colnames(pca_obj)
-      ) {
-        pca_obj$ct
-        
-      } else {
-        pca_obj$database
-      }
-      
-      # ---------- HOVER ----------
-      
-      pca_obj$hover_text <- paste0(
-        
-        "<b>",
-        pca_obj$name,
-        "</b>",
-        
-        if (
-          "generaltissue" %in% colnames(pca_obj)
-        ) {
-          paste0(
-            "<br>Tissue: ",
-            pca_obj$generaltissue
-          )
-        } else {
-          ""
-        },
-        
-        if (
-          "celltype" %in% colnames(pca_obj)
-        ) {
-          paste0(
-            "<br>Cell Type: ",
-            pca_obj$celltype
-          )
-        } else {
-          ""
-        },
-        
-        if (
-          "type" %in% colnames(pca_obj)
-        ) {
-          paste0(
-            "<br>Type: ",
-            pca_obj$type
-          )
-        } else {
-          ""
-        },
-        
-        if (
-          "ct" %in% colnames(pca_obj)
-        ) {
-          paste0(
-            "<br>CT: ",
-            pca_obj$ct
-          )
-        } else {
-          ""
-        }
-      )
-      
-      # ---------- PLOT ----------
-      
-      plot_ly(
-        
-        data = pca_obj,
-        
-        x = ~PC1,
-        y = ~PC2,
-        
-        type = "scatter",
-        mode = "markers",
-        
-        color = ~group,
-        
-        text = ~hover_text,
-        
-        hoverinfo = "text",
-        
-        marker = list(
-          size = 7,
-          opacity = 0.8
-        )
-        
-      ) %>%
-        
-        layout(
-          
-          title = "Principal Component Analysis",
-          
-          legend = list(
-            title = list(
-              text = "Biological Group"
-            )
-          ),
-          
-          xaxis = list(
-            title = "PC1"
-          ),
-          
-          yaxis = list(
-            title = "PC2"
-          )
-        )
-      
-    } else {
-      
-      # =========================
-      # CASE 2: PRCOMP OBJECT
-      # =========================
-      
-      pc_df <- as.data.frame(
-        pca_obj$x
-      )
-      
-      plot_ly(
-        
-        data = pc_df,
-        
-        x = ~PC1,
-        y = ~PC2,
-        
-        type = "scatter",
-        mode = "markers",
-        
-        marker = list(
-          size = 7,
-          opacity = 0.8
-        )
-        
-      ) %>%
-        
-        layout(
-          
-          title = "Principal Component Analysis",
-          
-          xaxis = list(
-            title = "PC1"
-          ),
-          
-          yaxis = list(
-            title = "PC2"
-          )
-        )
-    }
   })
-  
-  # ===== VARIANCE PLOT =====
-  
-  output$variance_plot <- renderPlotly({
-    
-    req(has_pca())
-    
-    pca_obj <- readRDS(
-      current_entry()$pca_path[1]
+
+  output$var_pred <- renderPlotly({
+    req(has_pred())
+    build_variance(current_entry()$pca_predicted_path[1])
+  })
+
+  output$entry_pca_gold <- renderPlotly({
+    req(has_gold())
+    build_type_pca(
+      current_entry()$pca_gold_path[1],
+      entry_group(),
+      "Gold-standard DNAm \u2014 PCA"
     )
-    
-    if (!is.null(pca_obj$sdev)) {
-      
-      variance <- pca_obj$sdev^2
-      
-      pve <- variance / sum(variance)
-      
-      cumvar <- cumsum(pve)
-      
-      df <- data.frame(
-        PC = seq_along(pve),
-        Variance = pve,
-        Cumulative = cumvar
-      )
-      
-      plot_ly(
-        data = df,
-        
-        x = ~PC,
-        y = ~Variance,
-        
-        type = "scatter",
-        mode = "lines+markers"
-        
-      ) %>%
-        
-        layout(
-          
-          title =
-            paste(
-              "Variance Explained",
-              "<br>",
-              which(cumvar >= 0.90)[1],
-              " PCs explain 90% variance"
-            ),
-          
-          xaxis = list(
-            title = "Principal Component"
-          ),
-          
-          yaxis = list(
-            title = "Variance Explained"
-          )
-        )
-    }
   })
-  
+
+  output$var_gold <- renderPlotly({
+    req(has_gold())
+    build_variance(current_entry()$pca_gold_path[1])
+  })
+
+  output$entry_pca_input <- renderPlotly({
+    req(has_input())
+    build_type_pca(
+      current_entry()$pca_input_path[1],
+      entry_group(),
+      "Input RNA \u2014 PCA"
+    )
+  })
+
+  output$var_input <- renderPlotly({
+    req(has_input())
+    build_variance(current_entry()$pca_input_path[1])
+  })
+
   # ===== UMAP =====
   
   output$entry_umap <- renderPlotly({

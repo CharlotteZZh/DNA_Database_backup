@@ -4,6 +4,7 @@ library(bslib)
 source("pages/home_page.R")
 source("pages/explore_page.R")
 source("pages/entry_page.R")
+source("pages/pca_page.R")
 source("pages/downloads_page.R")
 source("pages/about_page.R")
 source("pages/models_page.R")
@@ -86,7 +87,7 @@ server <- function(input, output, session) {
   )
   
   models_server(input, output, session)
-  
+
   downloads_server(input, output, session)
   
   about_server(input, output, session)
