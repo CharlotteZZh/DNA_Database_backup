@@ -63,6 +63,14 @@ read_table_matrix <- function(path) {
       data.table  = TRUE
     )
 
+    cat(
+      "  fread complete:",
+      nrow(dt),
+      "features x",
+      ncol(dt) - 1,
+      "samples\n"
+)
+
     rn  <- dt[[1]]
     dt  <- dt[, -1, with = FALSE]
 
@@ -127,30 +135,86 @@ run_pca <- function(mat, group, names, n_pcs = N_PCS) {
 
   storage.mode(mat) <- "double"
 
+  # --------------------------------------------------
+  # ENCODE SC memory protection
+  # --------------------------------------------------
+  # If matrix is enormous (> 1 million CpGs),
+  # take an evenly spaced subset before variance ranking.
+  #
+  # PCA is for visualization only; we do not need all
+  # 27 million CpGs to recover the sample structure.
+  # --------------------------------------------------
+
+  if (nrow(mat) > 1000000 && ncol(mat) > 100) {
+
+    target_rows <- 100000
+
+    keep <- unique(
+      round(
+        seq(
+          1,
+          nrow(mat),
+          length.out = target_rows
+        )
+      )
+    )
+
+    mat <- mat[keep, , drop = FALSE]
+
+    cat(
+      "  downsampled:",
+      nrow(mat),
+      "features retained for PCA\n"
+    )
+  }
+
   # drop zero-variance / all-NA features defensively
   keep_rows <- top_var_rows(mat, N_TOP)
-  sub       <- mat[keep_rows, , drop = FALSE]
 
-  # PCA over samples -> transpose so samples are rows
+  sub <- mat[
+    keep_rows,
+    ,
+    drop = FALSE
+  ]
+
+  cat(
+    "  PCA matrix:",
+    nrow(sub),
+    "features x",
+    ncol(sub),
+    "samples\n"
+  )
+
+  # PCA over samples
   pc <- prcomp(
     t(sub),
     center = TRUE,
     scale. = FALSE
   )
 
-  n_keep <- min(n_pcs, ncol(pc$x))
-
-  scores <- as.data.frame(
-    pc$x[, seq_len(n_keep), drop = FALSE]
+  n_keep <- min(
+    n_pcs,
+    ncol(pc$x)
   )
 
-  colnames(scores) <- paste0("PC", seq_len(n_keep))
+  scores <- as.data.frame(
+    pc$x[
+      ,
+      seq_len(n_keep),
+      drop = FALSE
+    ]
+  )
+
+  colnames(scores) <- paste0(
+    "PC",
+    seq_len(n_keep)
+  )
 
   scores$group <- group
   scores$name  <- names
 
-  # proportion of variance explained
   pve <- (pc$sdev^2) / sum(pc$sdev^2)
+
   attr(scores, "pve") <- pve
 
   scores
