@@ -13,11 +13,11 @@
 # shows one tab per type and highlights the current entry's tissue/group.
 #
 # This script reads the large source matrices from the HPC `predDNAmDB`
-# tree and writes SMALL coordinate data frames into data/pca/. Run it where
-# BASE_DIR is reachable (i.e. on the HPC), then copy data/pca/**/*_pca.rds
-# back into the repo if you generated it elsewhere.
+# tree and writes SMALL coordinate data frames into pca_gen/out/. Run it
+# where BASE_DIR is reachable (i.e. on the HPC), then point the Shiny app
+# metadata to these output files or copy them into the app repo.
 #
-# Output per job: data/pca/<dataset>/<type>_pca.rds
+# Output per job: pca_gen/out/<dataset>/<type>_pca.rds
 #   a data.frame with columns PC1..PCn, group, name (+ celltype where known)
 #   and attr(df, "pve") = proportion of variance explained per PC.
 #
@@ -29,7 +29,7 @@
 # =====================================================
 
 BASE_DIR <- "/insomnia001/depts/msph/users/jz4027/predDNAmDB"  # HPC source root
-OUT_DIR  <- "data/pca"                                          # repo output root
+OUT_DIR  <- "pca_gen/out"                                       # HPC PCA output root
 N_TOP    <- 5000   # keep the top-N most variable features before PCA
 N_PCS    <- 10     # number of principal components to retain
 
@@ -37,7 +37,21 @@ N_PCS    <- 10     # number of principal components to retain
 # GENERIC HELPERS
 # =====================================================
 
-# Fast CSV reader: prefer data.table::fread, fall back to read.csv.
+# Choose the first available source path for a job.
+resolve_source <- function(paths) {
+
+  full_paths <- file.path(BASE_DIR, paths)
+  found <- full_paths[file.exists(full_paths)]
+
+  if (length(found) == 0) {
+    return(NULL)
+  }
+
+  found[1]
+}
+
+# Fast delimited reader: prefer data.table::fread, fall back to base R.
+# Supports .csv, .csv.gz, .tsv, and .tsv.gz.
 read_table_matrix <- function(path) {
 
   if (requireNamespace("data.table", quietly = TRUE)) {
@@ -45,7 +59,8 @@ read_table_matrix <- function(path) {
     dt <- data.table::fread(
       path,
       header     = TRUE,
-      check.names = FALSE
+      check.names = FALSE,
+      data.table  = TRUE
     )
 
     rn  <- dt[[1]]
@@ -57,10 +72,17 @@ read_table_matrix <- function(path) {
     return(mat)
   }
 
-  df <- read.csv(
-    path,
+  is_tsv <- grepl("\\.tsv(\\.gz)?$", path, ignore.case = TRUE)
+  con <- if (grepl("\\.gz$", path, ignore.case = TRUE)) gzfile(path) else path
+
+  df <- read.table(
+    con,
+    header      = TRUE,
+    sep         = if (is_tsv) "\t" else ",",
     row.names   = 1,
-    check.names = FALSE
+    check.names = FALSE,
+    quote       = "",
+    comment.char = ""
   )
 
   as.matrix(df)
@@ -211,6 +233,53 @@ group_encode_sc <- function(samples) {
   )
 }
 
+# TCGA/TARGET: use project.csv when available to map sample IDs to cohorts.
+group_tcga <- function(samples) {
+
+  project_path <- file.path(
+    BASE_DIR,
+    "input/tcga_2024/full/project.csv"
+  )
+
+  if (file.exists(project_path)) {
+    project <- read.csv(project_path, stringsAsFactors = FALSE, check.names = FALSE)
+    names(project) <- tolower(names(project))
+
+    sample_col <- intersect(
+      c("sample", "sample_id", "sampleid", "barcode", "case", "case_id"),
+      names(project)
+    )[1]
+    project_col <- intersect(
+      c("project", "project_id", "cohort", "cancer", "cancer_type"),
+      names(project)
+    )[1]
+
+    if (!is.na(sample_col) && !is.na(project_col)) {
+      cohort <- project[[project_col]][match(samples, project[[sample_col]])]
+      cohort[is.na(cohort) | cohort == ""] <- "unknown"
+      return(list(group = cohort, extra = NULL))
+    }
+
+    if (ncol(project) >= 2) {
+      cohort <- project[[2]][match(samples, project[[1]])]
+      cohort[is.na(cohort) | cohort == ""] <- "unknown"
+      return(list(group = cohort, extra = NULL))
+    }
+  }
+
+  cohort <- ifelse(
+    grepl("^TCGA-", samples),
+    sub("^((TCGA-[^-]+)).*", "\\1", samples),
+    ifelse(
+      grepl("^TARGET-", samples),
+      sub("^((TARGET-[^-]+)).*", "\\1", samples),
+      "unknown"
+    )
+  )
+
+  list(group = cohort, extra = NULL)
+}
+
 # =====================================================
 # JOB DEFINITIONS
 # =====================================================
@@ -222,15 +291,65 @@ jobs <- list(
   list(
     dataset = "gtex",
     type    = "predicted",
-    source  = "predicted/gtex/full/gtex_ramp.rds",
-    reader  = read_rds_matrix,
+    source  = c(
+      "predicted/gtex/full/gtex_ramp.tsv.gz",
+      "predicted/gtex/full/gtex_ramp.rds"
+    ),
+    reader  = NULL,
     grouper = group_gtex
+  ),
+
+  list(
+    dataset = "encode_sc",
+    type    = "predicted",
+    source  = c(
+      "predicted/encode_sc/full/level3_human.tsv.gz",
+      "predicted/encode_sc/full/level3_human.rds"
+    ),
+    reader  = NULL,
+    grouper = group_encode_sc
+  ),
+
+  list(
+    dataset = "tcga",
+    type    = "predicted",
+    source  = c(
+      "predicted/tcga_2024/full/predicted_450k.tsv.gz"
+    ),
+    reader  = read_table_matrix,
+    grouper = group_tcga
+  ),
+
+  list(
+    dataset = "tcga",
+    type    = "gold",
+    source  = c(
+      "goldstandard/tcga_2024/full/450k.tsv.gz",
+      "goldstandard/tcga_2024/full/450k.csv"
+    ),
+    reader  = read_table_matrix,
+    grouper = group_tcga
+  ),
+
+  list(
+    dataset = "tcga",
+    type    = "input",
+    source  = c(
+      "input/tcga_2024/full/ge_for_450k.tsv.gz",
+      "input/tcga_2024/full/ge_for_450k.csv"
+    ),
+    reader  = read_table_matrix,
+    grouper = group_tcga
   ),
 
   list(
     dataset = "encode_bulk",
     type    = "gold",
-    source  = "goldstandard/encode_bulk/full/me_rownamesloc.csv",
+    source  = c(
+      "goldstandard/encode_bulk/full/me_rownamesloc.tsv.gz",
+      "goldstandard/encode_bulk/full/me_rownamesloc.csv.gz",
+      "goldstandard/encode_bulk/full/me_rownamesloc.csv"
+    ),
     reader  = read_table_matrix,
     grouper = group_encode_bulk
   ),
@@ -238,30 +357,32 @@ jobs <- list(
   list(
     dataset = "encode_bulk",
     type    = "input",
-    source  = "input/encode_bulk/full/ge.csv",
+    source  = c(
+      "input/encode_bulk/full/ge.tsv.gz",
+      "input/encode_bulk/full/ge.csv"
+    ),
     reader  = read_table_matrix,
     grouper = group_encode_bulk
-  ),
-
-  list(
-    dataset = "encode_sc",
-    type    = "predicted",
-    source  = "predicted/encode_sc/full/level3_human.rds",
-    reader  = read_rds_matrix,
-    grouper = group_encode_sc
   )
 
-  # ---------------------------------------------------------------
-  # TCGA (stretch goal) -- requires a parquet reader (arrow /
-  # nanoparquet / duckdb), which is NOT installed on the HPC R, and
-  # TCGA rows are not yet in data/metadata.csv. To enable:
-  #   install.packages("arrow"); add jobs below; add metadata rows.
-  #
-  #   predicted: predicted_split/group_*/<PROJECT>/part-*.parquet
-  #   gold:      goldstandard/tcga_2024/split_450k/<PROJECT>_gold_450k.csv
-  #   input:     input/tcga_2024/split_epic/<...>
-  # ---------------------------------------------------------------
+  # No full source was listed for these combinations in the new HPC map:
+  #   encode_bulk / predicted
+  #   encode_sc   / input, gold
+  #   gtex        / input, gold
 )
+
+for (i in seq_along(jobs)) {
+  src <- resolve_source(jobs[[i]]$source)
+  jobs[[i]]$resolved_source <- src
+
+  if (!is.null(src) && is.null(jobs[[i]]$reader)) {
+    jobs[[i]]$reader <- if (grepl("\\.rds$", src, ignore.case = TRUE)) {
+      read_rds_matrix
+    } else {
+      read_table_matrix
+    }
+  }
+}
 
 # =====================================================
 # RUN JOBS
@@ -273,10 +394,14 @@ for (job in jobs) {
   cat("JOB:", job$dataset, "/", job$type, "\n")
   cat("=====================================\n")
 
-  src <- file.path(BASE_DIR, job$source)
+  src <- job$resolved_source
 
-  if (!file.exists(src)) {
-    cat("  SKIP (source not found):", src, "\n")
+  if (is.null(src) || !file.exists(src)) {
+    cat(
+      "  SKIP (source not found):",
+      paste(file.path(BASE_DIR, job$source), collapse = " | "),
+      "\n"
+    )
     next
   }
 
