@@ -240,9 +240,9 @@ entry_server <- function(
       file.exists(path)
   }
 
-  has_pred  <- reactive(path_ok(current_entry()$pca_predicted_path[1]))
-  has_gold  <- reactive(path_ok(current_entry()$pca_gold_path[1]))
-  has_input <- reactive(path_ok(current_entry()$pca_input_path[1]))
+  has_pred  <- reactive(path_ok(current_entry()$predicted_pca[1]))
+  has_gold  <- reactive(path_ok(current_entry()$output_pca[1]))
+  has_input <- reactive(path_ok(current_entry()$input_pca[1]))
 
   has_umap  <- reactive(path_ok(current_entry()$umap_path[1]))
 
@@ -347,7 +347,7 @@ entry_server <- function(
   output$entry_pca_pred <- renderPlotly({
     req(has_pred())
     build_type_pca(
-      current_entry()$pca_predicted_path[1],
+      current_entry()$predicted_pca[1],
       entry_group(),
       "Predicted DNAm \u2014 PCA"
     )
@@ -355,13 +355,13 @@ entry_server <- function(
 
   output$var_pred <- renderPlotly({
     req(has_pred())
-    build_variance(current_entry()$pca_predicted_path[1])
+    build_variance(current_entry()$predicted_pca[1])
   })
 
   output$entry_pca_gold <- renderPlotly({
     req(has_gold())
     build_type_pca(
-      current_entry()$pca_gold_path[1],
+      current_entry()$output_pca[1],
       entry_group(),
       "Gold-standard DNAm \u2014 PCA"
     )
@@ -369,13 +369,13 @@ entry_server <- function(
 
   output$var_gold <- renderPlotly({
     req(has_gold())
-    build_variance(current_entry()$pca_gold_path[1])
+    build_variance(current_entry()$output_pca[1])
   })
 
   output$entry_pca_input <- renderPlotly({
     req(has_input())
     build_type_pca(
-      current_entry()$pca_input_path[1],
+      current_entry()$input_pca[1],
       entry_group(),
       "Input RNA \u2014 PCA"
     )
@@ -383,7 +383,7 @@ entry_server <- function(
 
   output$var_input <- renderPlotly({
     req(has_input())
-    build_variance(current_entry()$pca_input_path[1])
+    build_variance(current_entry()$input_pca[1])
   })
 
   # ===== UMAP =====

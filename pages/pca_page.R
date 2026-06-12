@@ -86,7 +86,14 @@ normalise_pca_df <- function(obj) {
 # the current entry; matching points are highlighted with an outlined overlay.
 build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
 
-  df  <- normalise_pca_df(readRDS(path))
+  df <- read.table(
+  gzfile(path),
+  header = TRUE,
+  sep = "\t",
+  stringsAsFactors = FALSE
+)
+
+df <- normalise_pca_df(df)
   pve <- attr(df, "pve")
 
   df$hover_text <- paste0(
