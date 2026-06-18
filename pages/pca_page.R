@@ -162,7 +162,16 @@ df <- normalise_pca_df(df)
 # carries no variance information.
 build_variance <- function(path, title = "Variance Explained") {
 
-  obj <- readRDS(path)
+  df <- read.table(
+    gzfile(path),
+    header = TRUE,
+    sep = "\t",
+    stringsAsFactors = FALSE
+  )
+
+  pve <- attr(df, "pve")
+
+  if (is.null(pve)) return(NULL)
 
   pve <- attr(obj, "pve")
 
