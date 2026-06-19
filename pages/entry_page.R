@@ -233,12 +233,12 @@ entry_server <- function(
   # ===== DETECT AVAILABLE FILES =====
 
   path_ok <- function(path) {
-    !is.null(path) &&
-      length(path) == 1 &&
-      !is.na(path) &&
-      path != "" &&
-      file.exists(path)
-  }
+  !is.null(path) &&
+    length(path) == 1 &&
+    !is.na(path) &&
+    nzchar(trimws(path)) &&
+    file.exists(path)
+}
 
   has_pred  <- reactive(path_ok(current_entry()$predicted_pca[1]))
   has_gold  <- reactive(path_ok(current_entry()$output_pca[1]))
