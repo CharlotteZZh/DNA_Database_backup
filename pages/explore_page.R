@@ -364,7 +364,7 @@ explore_server <- function(
       updateNavbarPage(
         session,
         "main_navbar",
-        selected = "Entry Details"
+        selected = "entry_hidden"
       )
     }
   )

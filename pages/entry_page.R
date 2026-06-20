@@ -1,9 +1,6 @@
 library(shiny)
 library(plotly)
 
-# PCA render helpers (build_type_pca / build_variance) live in
-# pages/pca_page.R and are sourced by app.R.
-
 entry_ui <- function() {
   
   fluidPage(
@@ -15,79 +12,117 @@ entry_ui <- function() {
         padding-top:25px;
       ",
       
-      div(
-        class = "entry-header",
-        
-        h1(
-          class = "entry-title",
-          textOutput("entry_title")
-        ),
-        
-        p(
-          style = "font-size:22px;",
-          textOutput("entry_subtitle")
-        )
-      ),
-      
       fluidRow(
         
-        # ===== LEFT PANEL =====
+        # =========================================
+        # LEFT COLUMN
+        # =========================================
         
         column(
           4,
           
+          # ===== DATASET INFORMATION =====
+          
           div(
             class = "feature-card",
             
-            h3("Dataset Information"),
+            h1(
+              style = "
+                font-size:24px;
+                font-weight:800;
+                margin-bottom:4px;
+                line-height:1.25;
+                word-break:break-word;
+              ",
+              textOutput("entry_title")
+            ),
+            
+            p(
+              style = "
+                font-size:16px;
+                color:#64748B;
+                margin-bottom:24px;
+              ",
+              textOutput("entry_subtitle")
+            ),
+            
+            h2("Dataset Information"),
             
             uiOutput("metadata_table")
           ),
           
           br(),
           
+          # ===== DATASET DESCRIPTION =====
+          
           div(
             class = "feature-card",
             
-            h3("Dataset Description"),
+            h2("Dataset Description"),
             
-            textOutput("dataset_notes")
+            p(
+              style = "
+                font-size:16px;
+                line-height:1.7;
+                color:#475569;
+                margin-bottom:0;
+              ",
+              textOutput("dataset_notes")
+            )
           ),
           
           br(),
           
+          # ===== DOWNLOADS =====
+          
           div(
             class = "feature-card",
             
-            h3("Downloads"),
+            h2("Downloads"),
             
             br(),
             
             uiOutput("prediction_download"),
-            
-            br(),
-            br(),
+            br(), br(),
             
             uiOutput("source_download"),
-            
-            br(),
-            br(),
+            br(), br(),
             
             uiOutput("rna_download"),
-            
-            br(),
-            br(),
+            br(), br(),
             
             uiOutput("plot_download")
           )
         ),
         
-        # ===== RIGHT PANEL =====
+        # =========================================
+        # RIGHT COLUMN
+        # =========================================
         
         column(
           8,
           
-          uiOutput("dynamic_tabs")
+          # ===== PCA =====
+          
+          div(
+            class = "feature-card",
+            
+            h2("Principal Component Analysis"),
+            
+            uiOutput("pca_tabs")
+          ),
+          
+          br(),
+          
+          # ===== UMAP =====
+          
+          div(
+            class = "feature-card",
+            
+            h2("UMAP Embeddings"),
+            
+            uiOutput("umap_tabs")
+          )
         )
       )
     )
@@ -102,439 +137,253 @@ entry_server <- function(
 ) {
   
   current_entry <- reactive({
-    
     req(selected_entry())
-    
     selected_entry()
   })
   
-  # ===== HEADER =====
+  # =========================================
+  # HEADER
+  # =========================================
   
   output$entry_title <- renderText({
-    
-    current_entry()$entry_name[1]
-    
+    current_entry()$tissue[1]
   })
   
   output$entry_subtitle <- renderText({
+  paste(
+    current_entry()$dataset[1],
+    "•",
+    current_entry()$species[1],
+    "•",
+    current_entry()$gene_expression[1],
+    "→",
+    current_entry()$dna_methylation_assay[1]
+  )
+})
+  
+  # =========================================
+  # METADATA TABLE
+  # =========================================
+  
+  output$metadata_table <- renderUI({
+  
+  div(
+    style = "
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      font-size:18px;
+      margin-top:10px;
+    ",
     
+    div(
+      style="display:flex;justify-content:space-between;",
+      strong("Dataset"),
+      span(current_entry()$dataset[1])
+    ),
+    
+    div(
+      style="display:flex;justify-content:space-between;",
+      strong("Species"),
+      span(current_entry()$species[1])
+    ),
+    
+    div(
+      style="display:flex;justify-content:space-between;",
+      strong("Samples"),
+      span(current_entry()$n_samples[1])
+    ),
+    
+    div(
+      style="display:flex;justify-content:space-between;",
+      strong("Condition"),
+      span(current_entry()$disease_status[1])
+    ),
+    
+    div(
+      style="display:flex;justify-content:space-between;",
+      strong("Input"),
+      span(current_entry()$gene_expression[1])
+    ),
+    
+    div(
+      style="display:flex;justify-content:space-between;",
+      strong("Output"),
+      span(current_entry()$dna_methylation_assay[1])
+    ),
+    
+    div(
+      style="display:flex;justify-content:space-between;",
+      strong("CpGs"),
+      span(
+        ifelse(
+          is.na(current_entry()$n_cpgs[1]),
+          "Genome-wide",
+          current_entry()$n_cpgs[1]
+        )
+      )
+    )
+  )
+})
+  
+  # =========================================
+  # DESCRIPTION
+  # =========================================
+  
+  output$dataset_notes <- renderText({
     paste(
+      "This dataset contains predicted and experimentally measured DNA methylation profiles reconstructed from",
       current_entry()$dataset[1],
-      "|",
-      current_entry()$tissue[1],
-      "|",
-      current_entry()$species[1]
+      "transcriptomic samples. The methylation profiles were generated using the MethylProphet framework and paired with gold-standard measurements when available."
     )
   })
   
-  # ===== METADATA =====
+  # =========================================
+  # PCA TABS
+  # =========================================
   
-  output$metadata_table <- renderUI({
+  output$pca_tabs <- renderUI({
     
-    tagList(
+    tabsetPanel(
       
-      div(
-        style = "
-          display:flex;
-          flex-wrap:wrap;
-          gap:10px;
-          margin-bottom:20px;
-        ",
-        
-        span(
-          style = "
-            background:#CCFBF1;
-            color:#0F766E;
-            padding:8px 14px;
-            border-radius:999px;
-            font-weight:700;
-          ",
-          
-          current_entry()$dataset[1]
-        ),
-        
-        span(
-          style = "
-            background:#DBEAFE;
-            color:#1D4ED8;
-            padding:8px 14px;
-            border-radius:999px;
-            font-weight:700;
-          ",
-          
-          current_entry()$species[1]
-        ),
-        
-        span(
-          style = "
-            background:#F3E8FF;
-            color:#7E22CE;
-            padding:8px 14px;
-            border-radius:999px;
-            font-weight:700;
-          ",
-          
-          current_entry()$gene_expression[1]
-        ),
-        
-        span(
-          style = "
-            background:#FEF3C7;
-            color:#B45309;
-            padding:8px 14px;
-            border-radius:999px;
-            font-weight:700;
-          ",
-          
-          current_entry()$dna_methylation_assay[1]
+      tabPanel("Input RNA",
+               plotlyOutput("entry_pca_input", height = "500px")),
+      
+      tabPanel("Predicted DNAm",
+               plotlyOutput("entry_pca_pred", height = "500px")),
+      
+      tabPanel("Gold-standard DNAm",
+               plotlyOutput("entry_pca_gold", height = "500px")),
+      
+      tabPanel("Static Plot",
+               plotlyOutput("entry_static", height = "500px"))
+    )
+  })
+  
+  # =========================================
+  # UMAP TABS
+  # =========================================
+  
+  output$umap_tabs <- renderUI({
+    
+    tabsetPanel(
+      
+      tabPanel(
+        "Input RNA",
+        div(
+          class = "coming-soon-box",
+          "Input RNA UMAP coming soon."
         )
       ),
       
-      tags$table(
-        style = "
-          width:100%;
-          font-size:17px;
-        ",
-        
-        tags$tr(
-          tags$td(strong("Tissue")),
-          tags$td(current_entry()$tissue[1])
-        ),
-        
-        tags$tr(
-          tags$td(strong("Disease")),
-          tags$td(current_entry()$disease_status[1])
-        ),
-        
-        tags$tr(
-          tags$td(strong("Samples")),
-          tags$td(current_entry()$n_samples[1])
-        ),
-        
-        tags$tr(
-          tags$td(strong("Cells")),
-          tags$td(current_entry()$n_cells[1])
-        ),
-        
-        tags$tr(
-          tags$td(strong("CpGs")),
-          tags$td(current_entry()$n_cpgs[1])
-        )
-      )
-    )
-  })
-  
-  output$dataset_notes <- renderText({
-    
-    current_entry()$notes[1]
-    
-  })
-  
-  # ===== DETECT AVAILABLE FILES =====
-
-  path_ok <- function(path) {
-  !is.null(path) &&
-    length(path) == 1 &&
-    !is.na(path) &&
-    nzchar(trimws(path)) &&
-    file.exists(path)
-}
-
-  has_pred  <- reactive(path_ok(current_entry()$predicted_pca[1]))
-  has_gold  <- reactive(path_ok(current_entry()$output_pca[1]))
-  has_input <- reactive(path_ok(current_entry()$input_pca[1]))
-
-  has_umap  <- reactive(path_ok(current_entry()$umap_path[1]))
-
-  entry_group <- reactive(current_entry()$pca_group[1])
-  
-  # ===== DYNAMIC TABS =====
-
-  output$dynamic_tabs <- renderUI({
-
-    # Placeholder shown inside a subtab when its data file is missing.
-    empty_panel <- function(label) {
-      div(
-        style = "
-          padding:60px 20px;
-          text-align:center;
-          color:#64748B;
-          font-size:18px;
-        ",
-        paste0("No ", label, " data available for this dataset yet.")
-      )
-    }
-
-    # A PCA subtab: interactive plot + variance curve when the file exists,
-    # otherwise the named-but-empty placeholder.
-    pca_tab <- function(label, available, plot_id, var_id) {
       tabPanel(
-        label,
-        br(),
-        if (available) {
-          tagList(
-            plotlyOutput(plot_id, height = "500px"),
-            br(),
-            plotlyOutput(var_id, height = "280px")
-          )
-        } else {
-          empty_panel(label)
-        }
-      )
-    }
-
-    # PCA TABS -- always present (Input, Output/Predicted, Gold)
-
-    tabs <- list(
-      pca_tab("Input RNA",          has_input(), "entry_pca_input", "var_input"),
-      pca_tab("Predicted DNAm",     has_pred(),  "entry_pca_pred",  "var_pred"),
-      pca_tab("Gold-standard DNAm", has_gold(),  "entry_pca_gold",  "var_gold")
-    )
-
-    # UMAP TAB (only when present)
-
-    if (has_umap()) {
-      tabs <- append(
-        tabs,
-        list(
-          tabPanel(
-            "UMAP",
-            br(),
-            plotlyOutput(
-              "entry_umap",
-              height = "500px"
-            )
-          )
+        "Predicted DNAm",
+        div(
+          class = "coming-soon-box",
+          "Predicted DNAm UMAP coming soon."
         )
-      )
-    }
-
-    # STATIC PLOT TAB -- always present
-
-    plot_path <- current_entry()$plot_path[1]
-    has_static <- !is.null(plot_path) &&
-      !is.na(plot_path) &&
-      plot_path != ""
-
-    tabs <- append(
-      tabs,
-      list(
-        tabPanel(
-          "Static Plot",
-          br(),
-          if (has_static) {
-            tags$iframe(
-              src = plot_path,
-              width = "100%",
-              height = "900px",
-              style = "border:none;"
-            )
-          } else {
-            empty_panel("Static plot")
-          }
+      ),
+      
+      tabPanel(
+        "Gold-standard DNAm",
+        div(
+          class = "coming-soon-box",
+          "Gold-standard DNAm UMAP coming soon."
         )
       )
     )
-
-    do.call(
-      tabsetPanel,
-      tabs
-    )
   })
   
-  # ===== PCA (one renderer per available data type) =====
 
-  output$entry_pca_pred <- renderPlotly({
-    req(has_pred())
-    build_type_pca(
-      current_entry()$predicted_pca[1],
-      entry_group(),
-      "Predicted DNAm \u2014 PCA"
-    )
-  })
+  # =========================================
+# PCA PLOTS
+# =========================================
 
-  output$var_pred <- renderPlotly({
-    req(has_pred())
-    build_variance(current_entry()$predicted_pca[1])
-  })
-
-  output$entry_pca_gold <- renderPlotly({
-    req(has_gold())
-    build_type_pca(
-      current_entry()$output_pca[1],
-      entry_group(),
-      "Gold-standard DNAm \u2014 PCA"
-    )
-  })
-
-  output$var_gold <- renderPlotly({
-    req(has_gold())
-    build_variance(current_entry()$output_pca[1])
-  })
-
-  output$entry_pca_input <- renderPlotly({
-    req(has_input())
-    build_type_pca(
-      current_entry()$input_pca[1],
-      entry_group(),
-      "Input RNA \u2014 PCA"
-    )
-  })
-
-  output$var_input <- renderPlotly({
-    req(has_input())
-    build_variance(current_entry()$input_pca[1])
-  })
-
-  # ===== UMAP =====
+output$entry_pca_input <- renderPlotly({
   
-  output$entry_umap <- renderPlotly({
-    
-    req(has_umap())
-    
-    umap_obj <- readRDS(
-      current_entry()$umap_path[1]
-    )
-    
-    umap_df <- as.data.frame(
-      umap_obj
-    )
-    
-    colnames(umap_df)[1:2] <- c(
-      "UMAP1",
-      "UMAP2"
-    )
-    
-    plot_ly(
-      data = umap_df,
-      
-      x = ~UMAP1,
-      y = ~UMAP2,
-      
-      type = "scatter",
-      mode = "markers"
-      
-    ) %>%
-      
-      layout(
-        title = "UMAP Visualization"
-      )
-  })
+  req(current_entry())
   
-  # ===== DOWNLOAD BUTTONS =====
+  build_type_pca(
+    current_entry()$input_pca[1],
+    current_entry()$pca_group[1],
+    "Input RNA — PCA"
+  )
+})
+
+output$entry_pca_pred <- renderPlotly({
   
-  # ---------------------------------
-  # FULL DATASET
-  # ---------------------------------
+  req(current_entry())
+  
+  build_type_pca(
+    current_entry()$predicted_pca[1],
+    current_entry()$pca_group[1],
+    "Predicted DNAm — PCA"
+  )
+})
+
+output$entry_pca_gold <- renderPlotly({
+  
+  req(current_entry())
+  
+  build_type_pca(
+    current_entry()$output_pca[1],
+    current_entry()$pca_group[1],
+    "Gold-standard DNAm — PCA"
+  )
+})
+
+output$entry_static <- renderPlotly({
+  
+  req(current_entry())
+  
+  build_type_pca(
+    current_entry()$predicted_pca[1],
+    current_entry()$pca_group[1],
+    "Static PCA View"
+  )
+})
+  
+  # =========================================
+  # DOWNLOAD BUTTONS
+  # =========================================
   
   output$prediction_download <- renderUI({
-    
     tags$a(
-      href =
-        current_entry()$full_dataset_download[1],
-      
+      href = current_entry()$predicted_path[1],
       target = "_blank",
-      
       class = "btn btn-primary",
-      
-      style = "
-      background:#0F766E;
-      border:none;
-      border-radius:18px;
-      padding:18px 30px;
-      font-size:20px;
-      font-weight:600;
-      width:100%;
-      margin-bottom:20px;
-    ",
-      
-      "Download Full Dataset"
+      style = "width:100%;",
+      "Download Predicted DNAm"
     )
   })
-  
-  # ---------------------------------
-  # INDIVIDUAL TISSUE DATASET
-  # ---------------------------------
   
   output$source_download <- renderUI({
-    
     tags$a(
-      href =
-        current_entry()$individual_download[1],
-      
+      href = current_entry()$gold_path[1],
       target = "_blank",
-      
       class = "btn btn-secondary",
-      
-      style = "
-      background:#164E63;
-      border:none;
-      border-radius:18px;
-      padding:18px 30px;
-      font-size:20px;
-      font-weight:600;
-      width:100%;
-      margin-bottom:20px;
-    ",
-      
-      "Download Individual Tissue Dataset"
+      style = "width:100%;",
+      "Download Gold-standard DNAm"
     )
   })
-  
-  # ---------------------------------
-  # SOURCE RNA DATA
-  # ---------------------------------
   
   output$rna_download <- renderUI({
-    
     tags$a(
-      href =
-        current_entry()$source_download[1],
-      
+      href = current_entry()$input_path[1],
       target = "_blank",
-      
       class = "btn btn-secondary",
-      
-      style = "
-      background:#1E3A8A;
-      border:none;
-      border-radius:18px;
-      padding:18px 30px;
-      font-size:20px;
-      font-weight:600;
-      width:100%;
-      margin-bottom:20px;
-    ",
-      
-      "Download Source RNA Data"
+      style = "width:100%;",
+      "Download Input RNA"
     )
   })
   
-  # ---------------------------------
-  # PCA / PLOT DATA
-  # ---------------------------------
-  
   output$plot_download <- renderUI({
-    
     tags$a(
-      href =
-        current_entry()$plot_download[1],
-      
+      href = current_entry()$plot_path[1],
       target = "_blank",
-      
       class = "btn btn-secondary",
-      
-      style = "
-      background:#334155;
-      border:none;
-      border-radius:18px;
-      padding:18px 30px;
-      font-size:20px;
-      font-weight:600;
-      width:100%;
-    ",
-      
-      "Download PCA / Plot Data"
+      style = "width:100%;",
+      "Download Static Plot"
     )
   })
 }

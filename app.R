@@ -13,18 +13,15 @@ ui <- navbarPage(
   
   title = div(
     style = "font-weight:700;",
-    "predDNAmDB"
+    "MethylProphet DB"
   ),
   
   id = "main_navbar",
   
   theme = bs_theme(
     version = 5,
-    bootswatch = "flatly",
     primary = "#0F766E",
-    secondary = "#164E63",
-    bg = "#F8FAFC",
-    fg = "#0F172A"
+    secondary = "#164E63"
   ),
   
   header = tags$head(
@@ -45,8 +42,10 @@ ui <- navbarPage(
     explore_ui()
   ),
   
+  # hidden entry page
   tabPanel(
-    "Entry Details",
+    title = "Entry Details",
+    value = "entry_hidden",
     entry_ui()
   ),
   
@@ -87,7 +86,7 @@ server <- function(input, output, session) {
   )
   
   models_server(input, output, session)
-
+  
   downloads_server(input, output, session)
   
   about_server(input, output, session)
