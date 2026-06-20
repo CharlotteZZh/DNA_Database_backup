@@ -270,6 +270,46 @@ COMING SOON
 }
 
 /* =========================================
+ENTRY METADATA CARDS
+========================================= */
+
+.mini-meta-card {
+  margin-top: 18px;      /* was too large */
+  margin-bottom: 14px;
+}
+
+.mini-meta-card h4 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;   /* tighter section title */
+  color: #0F172A;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;        /* much tighter */
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.meta-row:last-child {
+  border-bottom: none;
+}
+
+.meta-row span:first-child {
+  font-size: 15px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.meta-row span:last-child {
+  font-size: 15px;
+  font-weight: 500;
+  color: #0F172A;
+}
+
+/* =========================================
 ANIMATIONS
 ========================================= */
 

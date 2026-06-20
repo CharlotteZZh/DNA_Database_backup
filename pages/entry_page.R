@@ -21,32 +21,10 @@ entry_ui <- function() {
         column(
           4,
           
-          # ===== DATASET INFORMATION =====
+          # ===== METADATA =====
           
           div(
             class = "feature-card",
-            
-            h1(
-              style = "
-                font-size:24px;
-                font-weight:800;
-                margin-bottom:4px;
-                line-height:1.25;
-                word-break:break-word;
-              ",
-              textOutput("entry_title")
-            ),
-            
-            p(
-              style = "
-                font-size:16px;
-                color:#64748B;
-                margin-bottom:24px;
-              ",
-              textOutput("entry_subtitle")
-            ),
-            
-            h2("Dataset Information"),
             
             uiOutput("metadata_table")
           ),
@@ -142,89 +120,125 @@ entry_server <- function(
   })
   
   # =========================================
-  # HEADER
-  # =========================================
-  
-  output$entry_title <- renderText({
-    current_entry()$tissue[1]
-  })
-  
-  output$entry_subtitle <- renderText({
-  paste(
-    current_entry()$dataset[1],
-    "•",
-    current_entry()$species[1],
-    "•",
-    current_entry()$gene_expression[1],
-    "→",
-    current_entry()$dna_methylation_assay[1]
-  )
-})
-  
-  # =========================================
-  # METADATA TABLE
+  # METADATA
   # =========================================
   
   output$metadata_table <- renderUI({
-  
-  div(
-    style = "
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-      font-size:18px;
-      margin-top:10px;
-    ",
     
     div(
-      style="display:flex;justify-content:space-between;",
-      strong("Dataset"),
-      span(current_entry()$dataset[1])
-    ),
-    
-    div(
-      style="display:flex;justify-content:space-between;",
-      strong("Species"),
-      span(current_entry()$species[1])
-    ),
-    
-    div(
-      style="display:flex;justify-content:space-between;",
-      strong("Samples"),
-      span(current_entry()$n_samples[1])
-    ),
-    
-    div(
-      style="display:flex;justify-content:space-between;",
-      strong("Condition"),
-      span(current_entry()$disease_status[1])
-    ),
-    
-    div(
-      style="display:flex;justify-content:space-between;",
-      strong("Input"),
-      span(current_entry()$gene_expression[1])
-    ),
-    
-    div(
-      style="display:flex;justify-content:space-between;",
-      strong("Output"),
-      span(current_entry()$dna_methylation_assay[1])
-    ),
-    
-    div(
-      style="display:flex;justify-content:space-between;",
-      strong("CpGs"),
-      span(
-        ifelse(
-          is.na(current_entry()$n_cpgs[1]),
-          "Genome-wide",
-          current_entry()$n_cpgs[1]
+      
+      # MAIN TITLE
+      h2(
+        style="
+          font-size:42px;
+          font-weight:800;
+          margin-bottom:6px;
+          color:#0F172A;
+        ",
+        tools::toTitleCase(
+          gsub("_", " ", current_entry()$tissue[1])
+        )
+      ),
+      
+      # SUBTITLE
+      p(
+        style="
+          font-size:18px;
+          color:#64748B;
+          margin-bottom:6px;
+        ",
+        gsub("_", " ", current_entry()$entry_name[1])
+      ),
+      
+      p(
+        style="
+          font-size:16px;
+          color:#94A3B8;
+          margin-bottom:14px;
+        ",
+        paste(
+          current_entry()$species[1],
+          "·",
+          current_entry()$disease_status[1]
+        )
+      ),
+      
+      # MODALITY BADGE
+      div(
+        style="
+          display:inline-block;
+          padding:10px 18px;
+          border-radius:999px;
+          background:#F3E8FF;
+          color:#6D28D9;
+          font-size:15px;
+          font-weight:700;
+          margin-bottom:18px;
+        ",
+        paste(
+          current_entry()$gene_expression[1],
+          "→",
+          current_entry()$dna_methylation_assay[1]
+        )
+      ),
+      
+      # ENTRY BLOCK
+      div(
+        class = "mini-meta-card",
+        
+        h4("Entry"),
+        
+        div(
+          class = "meta-row",
+          span("Biological context"),
+          span(
+            tools::toTitleCase(
+              gsub("_", " ", current_entry()$tissue[1])
+            )
+          )
+        ),
+        
+        div(
+          class = "meta-row",
+          span("Samples"),
+          span(current_entry()$n_samples[1])
+        )
+      ),
+      
+      div(style="height:8px;"),
+      
+      # DATASET BLOCK
+      div(
+        class = "mini-meta-card",
+        
+        h4("Dataset"),
+        
+        div(
+          class = "meta-row",
+          span("Parent cohort"),
+          span(current_entry()$dataset[1])
+        ),
+        
+        div(
+          class = "meta-row",
+          span("PCA scope"),
+          span("Pan-dataset")
+        ),
+        
+        div(
+          class = "meta-row",
+          span("Methylation"),
+          span(current_entry()$dna_methylation_assay[1])
+        ),
+        
+        div(
+          class = "meta-row",
+          span("Coverage"),
+          span("Genome-wide")
         )
       )
     )
-  )
-})
+  })
   
   # =========================================
   # DESCRIPTION
@@ -234,7 +248,7 @@ entry_server <- function(
     paste(
       "This dataset contains predicted and experimentally measured DNA methylation profiles reconstructed from",
       current_entry()$dataset[1],
-      "transcriptomic samples. The methylation profiles were generated using the MethylProphet framework and paired with gold-standard measurements when available."
+      "transcriptomic samples using the MethylProphet framework."
     )
   })
   
@@ -246,17 +260,46 @@ entry_server <- function(
     
     tabsetPanel(
       
-      tabPanel("Input RNA",
-               plotlyOutput("entry_pca_input", height = "500px")),
+      tabPanel(
+        "Input RNA",
+        plotlyOutput("entry_pca_input", height = "500px")
+      ),
       
-      tabPanel("Predicted DNAm",
-               plotlyOutput("entry_pca_pred", height = "500px")),
+      tabPanel(
+        "Predicted DNAm",
+        plotlyOutput("entry_pca_pred", height = "500px")
+      ),
       
-      tabPanel("Gold-standard DNAm",
-               plotlyOutput("entry_pca_gold", height = "500px")),
+      tabPanel(
+        "Gold-standard DNAm",
+        plotlyOutput("entry_pca_gold", height = "500px")
+      ),
       
-      tabPanel("Static Plot",
-               plotlyOutput("entry_static", height = "500px"))
+      tabPanel(
+        "Static Plot",
+        
+        br(),
+        
+        if (
+          !is.na(current_entry()$plot_path[1]) &&
+          current_entry()$plot_path[1] != ""
+        ) {
+          
+          tags$iframe(
+            src = current_entry()$plot_path[1],
+            width = "100%",
+            height = "900px",
+            style = "border:none;"
+          )
+          
+        } else {
+          
+          div(
+            class = "coming-soon-box",
+            "Static plot unavailable."
+          )
+        }
+      )
     )
   })
   
@@ -294,57 +337,42 @@ entry_server <- function(
     )
   })
   
-
   # =========================================
-# PCA PLOTS
-# =========================================
-
-output$entry_pca_input <- renderPlotly({
+  # PCA PLOTS
+  # =========================================
   
-  req(current_entry())
+  output$entry_pca_input <- renderPlotly({
+    req(current_entry())
+    
+    build_type_pca(
+      current_entry()$input_pca[1],
+      current_entry()$pca_group[1],
+      "Input RNA — PCA"
+    )
+  })
   
-  build_type_pca(
-    current_entry()$input_pca[1],
-    current_entry()$pca_group[1],
-    "Input RNA — PCA"
-  )
-})
-
-output$entry_pca_pred <- renderPlotly({
+  output$entry_pca_pred <- renderPlotly({
+    req(current_entry())
+    
+    build_type_pca(
+      current_entry()$predicted_pca[1],
+      current_entry()$pca_group[1],
+      "Predicted DNAm — PCA"
+    )
+  })
   
-  req(current_entry())
-  
-  build_type_pca(
-    current_entry()$predicted_pca[1],
-    current_entry()$pca_group[1],
-    "Predicted DNAm — PCA"
-  )
-})
-
-output$entry_pca_gold <- renderPlotly({
-  
-  req(current_entry())
-  
-  build_type_pca(
-    current_entry()$output_pca[1],
-    current_entry()$pca_group[1],
-    "Gold-standard DNAm — PCA"
-  )
-})
-
-output$entry_static <- renderPlotly({
-  
-  req(current_entry())
-  
-  build_type_pca(
-    current_entry()$predicted_pca[1],
-    current_entry()$pca_group[1],
-    "Static PCA View"
-  )
-})
+  output$entry_pca_gold <- renderPlotly({
+    req(current_entry())
+    
+    build_type_pca(
+      current_entry()$output_pca[1],
+      current_entry()$pca_group[1],
+      "Gold-standard DNAm — PCA"
+    )
+  })
   
   # =========================================
-  # DOWNLOAD BUTTONS
+  # DOWNLOADS
   # =========================================
   
   output$prediction_download <- renderUI({
