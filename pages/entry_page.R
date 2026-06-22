@@ -2,42 +2,37 @@ library(shiny)
 library(plotly)
 
 entry_ui <- function() {
-  
+
   fluidPage(
-    
+
     div(
       style = "
         max-width:1600px;
         margin:auto;
         padding-top:25px;
       ",
-      
+
       fluidRow(
-        
+
         # =========================================
         # LEFT COLUMN
         # =========================================
-        
+
         column(
           4,
-          
-          # ===== METADATA =====
-          
+
           div(
             class = "feature-card",
-            
             uiOutput("metadata_table")
           ),
-          
+
           br(),
-          
-          # ===== DATASET DESCRIPTION =====
-          
+
           div(
             class = "feature-card",
-            
+
             h2("Dataset Description"),
-            
+
             p(
               style = "
                 font-size:16px;
@@ -48,57 +43,51 @@ entry_ui <- function() {
               textOutput("dataset_notes")
             )
           ),
-          
+
           br(),
-          
-          # ===== DOWNLOADS =====
-          
+
           div(
             class = "feature-card",
-            
+
             h2("Downloads"),
-            
+
             br(),
-            
+
             uiOutput("prediction_download"),
             br(), br(),
-            
+
             uiOutput("source_download"),
             br(), br(),
-            
+
             uiOutput("rna_download"),
             br(), br(),
-            
+
             uiOutput("plot_download")
           )
         ),
-        
+
         # =========================================
         # RIGHT COLUMN
         # =========================================
-        
+
         column(
           8,
-          
-          # ===== PCA =====
-          
+
           div(
             class = "feature-card",
-            
+
             h2("Principal Component Analysis"),
-            
+
             uiOutput("pca_tabs")
           ),
-          
+
           br(),
-          
-          # ===== UMAP =====
-          
+
           div(
             class = "feature-card",
-            
+
             h2("UMAP Embeddings"),
-            
+
             uiOutput("umap_tabs")
           )
         )
@@ -113,243 +102,257 @@ entry_server <- function(
     session,
     selected_entry
 ) {
-  
+
   current_entry <- reactive({
     req(selected_entry())
     selected_entry()
   })
-  
+
   # =========================================
   # METADATA
   # =========================================
-  
+
   output$metadata_table <- renderUI({
 
-  div(
-
-    # =========================================
-    # HEADER
-    # =========================================
-
-    h2(
-      style="
-        font-size:38px;
-        font-weight:800;
-        margin-bottom:4px;
-        color:#0F172A;
-        line-height:1.1;
-      ",
-      tools::toTitleCase(
-        gsub("_", " ", current_entry()$tissue[1])
-      )
-    ),
-
-    p(
-      style="
-        font-size:16px;
-        color:#64748B;
-        margin-bottom:4px;
-      ",
-      gsub("_", " ", current_entry()$dataset[1])
-    ),
-
-    p(
-      style="
-        font-size:14px;
-        color:#94A3B8;
-        margin-bottom:14px;
-      ",
-      paste(
-        current_entry()$species[1],
-        "·",
-        current_entry()$disease_status[1]
-      )
-    ),
-
-    # MODALITY BADGE
     div(
-      style="
-        display:inline-block;
-        padding:8px 16px;
-        border-radius:999px;
-        background:#F3E8FF;
-        color:#6D28D9;
-        font-size:14px;
-        font-weight:700;
-        margin-bottom:18px;
-      ",
-      paste(
-        current_entry()$gene_expression[1],
-        "→",
-        current_entry()$dna_methylation_assay[1]
-      )
-    ),
 
-    # =========================================
-    # ENTRY STATS
-    # =========================================
+      # HEADER
+      h2(
+        style="
+          font-size:38px;
+          font-weight:800;
+          margin-bottom:4px;
+          color:#0F172A;
+          line-height:1.1;
+        ",
+        tools::toTitleCase(
+          gsub("_", " ", current_entry()$tissue[1])
+        )
+      ),
 
-    div(
-      class = "mini-meta-card",
+      p(
+        style="
+          font-size:16px;
+          color:#64748B;
+          margin-bottom:4px;
+        ",
+        gsub("_", " ", current_entry()$dataset[1])
+      ),
 
-      h4("Entry"),
+      p(
+        style="
+          font-size:14px;
+          color:#94A3B8;
+          margin-bottom:14px;
+        ",
+        paste(
+          current_entry()$species[1],
+          "·",
+          current_entry()$disease_status[1]
+        )
+      ),
+
+      # BADGE
+      div(
+        style="
+          display:inline-block;
+          padding:8px 16px;
+          border-radius:999px;
+          background:#F3E8FF;
+          color:#6D28D9;
+          font-size:14px;
+          font-weight:700;
+          margin-bottom:18px;
+        ",
+        paste(
+          current_entry()$gene_expression[1],
+          "→",
+          current_entry()$dna_methylation_assay[1]
+        )
+      ),
+
+      # =========================================
+      # ENTRY STATS
+      # =========================================
 
       div(
-        class = "meta-grid",
+        class = "mini-meta-card",
+
+        h4("Entry"),
 
         div(
-          class = "meta-stat",
-          h5("Tissue"),
-          p(
-            tools::toTitleCase(
-              gsub("_", " ", current_entry()$tissue[1])
+          class = "meta-grid",
+
+          div(
+            class = "meta-stat",
+            h5("Tissue"),
+            p(
+              tools::toTitleCase(
+                gsub("_", " ", current_entry()$tissue[1])
+              )
+            )
+          ),
+
+          div(
+            class = "meta-stat",
+            h5("n"),
+            p(current_entry()$n_samples_per_tissue[1])
+          ),
+
+          div(
+            class = "meta-stat",
+            h5("CpGs"),
+            p(
+              format(
+                current_entry()$n_cpgs_total[1],
+                big.mark = ","
+              )
+            )
+          ),
+
+          div(
+            class = "meta-stat",
+            h5("β"),
+            p(
+              if (
+                !is.na(current_entry()$beta_mean_total[1]) &&
+                current_entry()$beta_mean_total[1] != ""
+              )
+                round(
+                  as.numeric(current_entry()$beta_mean_total[1]),
+                  3
+                )
+              else
+                "N/A"
+            )
+          ),
+
+          div(
+            class = "meta-stat",
+            h5("Expr"),
+            p(
+              if (
+                !is.na(current_entry()$Expr_mean_total[1]) &&
+                current_entry()$Expr_mean_total[1] != ""
+              )
+                round(
+                  as.numeric(current_entry()$Expr_mean_total[1]),
+                  3
+                )
+              else
+                "N/A"
             )
           )
-        ),
-
-        div(
-          class = "meta-stat",
-          h5("n"),
-          p(current_entry()$n_samples[1])
-        ),
-
-        div(
-          class = "meta-stat",
-          h5("CpGs"),
-          p(
-            if ("n_cpgs" %in% names(current_entry()))
-              format(current_entry()$n_cpgs[1], big.mark = ",")
-            else
-              "27M+"
-          )
-        ),
-
-        div(
-          class = "meta-stat",
-          h5("β mean"),
-          p(
-            if ("mean_beta" %in% names(current_entry()))
-              round(current_entry()$mean_beta[1], 3)
-            else
-              "N/A"
-          )
-        ),
-
-        div(
-          class = "meta-stat",
-          h5("Expr mean"),
-          p(
-            if ("mean_expr" %in% names(current_entry()))
-              round(current_entry()$mean_expr[1], 2)
-            else
-              "N/A"
-          )
         )
-      )
-    ),
+      ),
 
-    div(style="height:6px;"),
+      div(style="height:6px;"),
 
-    # =========================================
-    # DATASET STATS
-    # =========================================
-
-    div(
-      class = "mini-meta-card",
-
-      h4("Dataset"),
+      # =========================================
+      # DATASET STATS
+      # =========================================
 
       div(
-        class = "meta-grid",
+        class = "mini-meta-card",
+
+        h4("Dataset"),
 
         div(
-          class = "meta-stat",
-          h5("Dataset"),
-          p(current_entry()$dataset[1])
-        ),
+          class = "meta-grid",
 
-        div(
-          class = "meta-stat",
-          h5("PCA"),
-          p("Pan-dataset")
-        ),
+          div(
+            class = "meta-stat",
+            h5("Total n"),
+            p(current_entry()$n_samples_total[1])
+          ),
 
-        div(
-          class = "meta-stat",
-          h5("Input"),
-          p(current_entry()$gene_expression[1])
-        ),
+          div(
+            class = "meta-stat",
+            h5("CpGs"),
+            p(
+              format(
+                current_entry()$n_cpgs_total[1],
+                big.mark = ","
+              )
+            )
+          ),
 
-        div(
-          class = "meta-stat",
-          h5("Output"),
-          p(current_entry()$dna_methylation_assay[1])
-        ),
+          div(
+            class = "meta-stat",
+            h5("PCA"),
+            p("Pan-dataset")
+          ),
 
-        div(
-          class = "meta-stat",
-          h5("CpG Cov"),
-          p("Genome-wide")
+          div(
+            class = "meta-stat",
+            h5("Input"),
+            p(current_entry()$gene_expression[1])
+          ),
+
+          div(
+            class = "meta-stat",
+            h5("Output"),
+            p(current_entry()$dna_methylation_assay[1])
+          )
         )
       )
     )
-  )
-})
-  
+  })
+
   # =========================================
   # DESCRIPTION
   # =========================================
-  
+
   output$dataset_notes <- renderText({
     paste(
-      "This dataset contains predicted and experimentally measured DNA methylation profiles reconstructed from",
+      "This entry represents a tissue- or cohort-specific subset of the",
       current_entry()$dataset[1],
-      "transcriptomic samples using the MethylProphet framework."
+      "dataset. Interactive PCA embeddings are computed at the full dataset level to preserve global biological structure and enable cross-tissue or cross-cohort comparisons."
     )
   })
-  
+
   # =========================================
   # PCA TABS
   # =========================================
-  
+
   output$pca_tabs <- renderUI({
-    
+
     tabsetPanel(
-      
+
       tabPanel(
         "Input RNA",
         plotlyOutput("entry_pca_input", height = "500px")
       ),
-      
+
       tabPanel(
         "Predicted DNAm",
         plotlyOutput("entry_pca_pred", height = "500px")
       ),
-      
+
       tabPanel(
         "Gold-standard DNAm",
         plotlyOutput("entry_pca_gold", height = "500px")
       ),
-      
+
       tabPanel(
         "Static Plot",
-        
+
         br(),
-        
+
         if (
           !is.na(current_entry()$plot_path[1]) &&
           current_entry()$plot_path[1] != ""
         ) {
-          
+
           tags$iframe(
             src = current_entry()$plot_path[1],
             width = "100%",
             height = "900px",
             style = "border:none;"
           )
-          
+
         } else {
-          
+
           div(
             class = "coming-soon-box",
             "Static plot unavailable."
@@ -358,79 +361,60 @@ entry_server <- function(
       )
     )
   })
-  
+
   # =========================================
   # UMAP TABS
   # =========================================
-  
+
   output$umap_tabs <- renderUI({
-    
+
     tabsetPanel(
-      
+
       tabPanel(
         "Input RNA",
-        div(
-          class = "coming-soon-box",
-          "Input RNA UMAP coming soon."
-        )
+        div(class = "coming-soon-box", "Input RNA UMAP coming soon.")
       ),
-      
+
       tabPanel(
         "Predicted DNAm",
-        div(
-          class = "coming-soon-box",
-          "Predicted DNAm UMAP coming soon."
-        )
+        div(class = "coming-soon-box", "Predicted DNAm UMAP coming soon.")
       ),
-      
+
       tabPanel(
         "Gold-standard DNAm",
-        div(
-          class = "coming-soon-box",
-          "Gold-standard DNAm UMAP coming soon."
-        )
+        div(class = "coming-soon-box", "Gold-standard DNAm UMAP coming soon.")
       )
     )
   })
-  
-  # =========================================
-  # PCA PLOTS
-  # =========================================
-  
+
+  # PCA plots
+
   output$entry_pca_input <- renderPlotly({
-    req(current_entry())
-    
     build_type_pca(
       current_entry()$input_pca[1],
       current_entry()$pca_group[1],
       "Input RNA — PCA"
     )
   })
-  
+
   output$entry_pca_pred <- renderPlotly({
-    req(current_entry())
-    
     build_type_pca(
       current_entry()$predicted_pca[1],
       current_entry()$pca_group[1],
       "Predicted DNAm — PCA"
     )
   })
-  
+
   output$entry_pca_gold <- renderPlotly({
-    req(current_entry())
-    
     build_type_pca(
       current_entry()$output_pca[1],
       current_entry()$pca_group[1],
       "Gold-standard DNAm — PCA"
     )
   })
-  
-  # =========================================
+
   # DOWNLOADS
-  # =========================================
-  
+
   output$prediction_download <- renderUI({
     tags$a(
       href = current_entry()$predicted_path[1],
@@ -440,7 +424,7 @@ entry_server <- function(
       "Download Predicted DNAm"
     )
   })
-  
+
   output$source_download <- renderUI({
     tags$a(
       href = current_entry()$gold_path[1],
@@ -450,7 +434,7 @@ entry_server <- function(
       "Download Gold-standard DNAm"
     )
   })
-  
+
   output$rna_download <- renderUI({
     tags$a(
       href = current_entry()$input_path[1],
@@ -460,7 +444,7 @@ entry_server <- function(
       "Download Input RNA"
     )
   })
-  
+
   output$plot_download <- renderUI({
     tags$a(
       href = current_entry()$plot_path[1],
