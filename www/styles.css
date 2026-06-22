@@ -338,3 +338,45 @@ ANIMATIONS
 a[data-value="entry_hidden"] {
   display: none !important;
 }
+
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.meta-stat {
+  background: #F8FAFC;
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-height: 72px;
+}
+
+.meta-stat h5 {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748B;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.meta-stat p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.mini-meta-card {
+  margin-top: 12px;
+  margin-bottom: 10px;
+}
+
+.mini-meta-card h4 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}

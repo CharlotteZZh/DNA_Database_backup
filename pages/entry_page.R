@@ -124,121 +124,177 @@ entry_server <- function(
   # =========================================
   
   output$metadata_table <- renderUI({
-    
+
+  div(
+
+    # =========================================
+    # HEADER
+    # =========================================
+
+    h2(
+      style="
+        font-size:38px;
+        font-weight:800;
+        margin-bottom:4px;
+        color:#0F172A;
+        line-height:1.1;
+      ",
+      tools::toTitleCase(
+        gsub("_", " ", current_entry()$tissue[1])
+      )
+    ),
+
+    p(
+      style="
+        font-size:16px;
+        color:#64748B;
+        margin-bottom:4px;
+      ",
+      gsub("_", " ", current_entry()$dataset[1])
+    ),
+
+    p(
+      style="
+        font-size:14px;
+        color:#94A3B8;
+        margin-bottom:14px;
+      ",
+      paste(
+        current_entry()$species[1],
+        "·",
+        current_entry()$disease_status[1]
+      )
+    ),
+
+    # MODALITY BADGE
     div(
-      
-      # MAIN TITLE
-      h2(
-        style="
-          font-size:42px;
-          font-weight:800;
-          margin-bottom:6px;
-          color:#0F172A;
-        ",
-        tools::toTitleCase(
-          gsub("_", " ", current_entry()$tissue[1])
-        )
-      ),
-      
-      # SUBTITLE
-      p(
-        style="
-          font-size:18px;
-          color:#64748B;
-          margin-bottom:6px;
-        ",
-        gsub("_", " ", current_entry()$entry_name[1])
-      ),
-      
-      p(
-        style="
-          font-size:16px;
-          color:#94A3B8;
-          margin-bottom:14px;
-        ",
-        paste(
-          current_entry()$species[1],
-          "·",
-          current_entry()$disease_status[1]
-        )
-      ),
-      
-      # MODALITY BADGE
+      style="
+        display:inline-block;
+        padding:8px 16px;
+        border-radius:999px;
+        background:#F3E8FF;
+        color:#6D28D9;
+        font-size:14px;
+        font-weight:700;
+        margin-bottom:18px;
+      ",
+      paste(
+        current_entry()$gene_expression[1],
+        "→",
+        current_entry()$dna_methylation_assay[1]
+      )
+    ),
+
+    # =========================================
+    # ENTRY STATS
+    # =========================================
+
+    div(
+      class = "mini-meta-card",
+
+      h4("Entry"),
+
       div(
-        style="
-          display:inline-block;
-          padding:10px 18px;
-          border-radius:999px;
-          background:#F3E8FF;
-          color:#6D28D9;
-          font-size:15px;
-          font-weight:700;
-          margin-bottom:18px;
-        ",
-        paste(
-          current_entry()$gene_expression[1],
-          "→",
-          current_entry()$dna_methylation_assay[1]
-        )
-      ),
-      
-      # ENTRY BLOCK
-      div(
-        class = "mini-meta-card",
-        
-        h4("Entry"),
-        
+        class = "meta-grid",
+
         div(
-          class = "meta-row",
-          span("Biological context"),
-          span(
+          class = "meta-stat",
+          h5("Tissue"),
+          p(
             tools::toTitleCase(
               gsub("_", " ", current_entry()$tissue[1])
             )
           )
         ),
-        
+
         div(
-          class = "meta-row",
-          span("Samples"),
-          span(current_entry()$n_samples[1])
+          class = "meta-stat",
+          h5("n"),
+          p(current_entry()$n_samples[1])
+        ),
+
+        div(
+          class = "meta-stat",
+          h5("CpGs"),
+          p(
+            if ("n_cpgs" %in% names(current_entry()))
+              format(current_entry()$n_cpgs[1], big.mark = ",")
+            else
+              "27M+"
+          )
+        ),
+
+        div(
+          class = "meta-stat",
+          h5("β mean"),
+          p(
+            if ("mean_beta" %in% names(current_entry()))
+              round(current_entry()$mean_beta[1], 3)
+            else
+              "N/A"
+          )
+        ),
+
+        div(
+          class = "meta-stat",
+          h5("Expr mean"),
+          p(
+            if ("mean_expr" %in% names(current_entry()))
+              round(current_entry()$mean_expr[1], 2)
+            else
+              "N/A"
+          )
         )
-      ),
-      
-      div(style="height:8px;"),
-      
-      # DATASET BLOCK
+      )
+    ),
+
+    div(style="height:6px;"),
+
+    # =========================================
+    # DATASET STATS
+    # =========================================
+
+    div(
+      class = "mini-meta-card",
+
+      h4("Dataset"),
+
       div(
-        class = "mini-meta-card",
-        
-        h4("Dataset"),
-        
+        class = "meta-grid",
+
         div(
-          class = "meta-row",
-          span("Parent cohort"),
-          span(current_entry()$dataset[1])
+          class = "meta-stat",
+          h5("Dataset"),
+          p(current_entry()$dataset[1])
         ),
-        
+
         div(
-          class = "meta-row",
-          span("PCA scope"),
-          span("Pan-dataset")
+          class = "meta-stat",
+          h5("PCA"),
+          p("Pan-dataset")
         ),
-        
+
         div(
-          class = "meta-row",
-          span("Methylation"),
-          span(current_entry()$dna_methylation_assay[1])
+          class = "meta-stat",
+          h5("Input"),
+          p(current_entry()$gene_expression[1])
         ),
-        
+
         div(
-          class = "meta-row",
-          span("Coverage"),
-          span("Genome-wide")
+          class = "meta-stat",
+          h5("Output"),
+          p(current_entry()$dna_methylation_assay[1])
+        ),
+
+        div(
+          class = "meta-stat",
+          h5("CpG Cov"),
+          p("Genome-wide")
         )
       )
     )
-  })
+  )
+})
   
   # =========================================
   # DESCRIPTION
