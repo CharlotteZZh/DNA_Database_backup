@@ -1,0 +1,96 @@
+UMAP1	UMAP2	name	group
+-0.452623759855726	-2.2504881457854	Homo sapiens aorta tissue male adult (34 years)	Homo sapiens aorta tissue male adult (34 years)
+-0.994912064331917	-1.46593722801631	Homo sapiens urinary bladder tissue male child (3 years)	Homo sapiens urinary bladder tissue male child (3 years)
+-4.14067544321442	1.3159641859376	Homo sapiens B cell male adult (37 years)	Homo sapiens B cell male adult (37 years)
+-4.63025104827748	0.652455209397225	Homo sapiens CD14-positive monocyte male adult (37 years)	Homo sapiens CD14-positive monocyte male adult (37 years)
+-6.53186868228774	1.00487943064068	Homo sapiens common myeloid progenitor, CD34-positive female adult (33 years)	Homo sapiens common myeloid progenitor, CD34-positive female adult (33 years)
+-5.93729673617425	4.41798421854037	Homo sapiens ectodermal cell originated from HUES64	Homo sapiens ectodermal cell originated from HUES64
+-5.72659334790863	4.51520572958243	Homo sapiens endodermal cell originated from HUES64	Homo sapiens endodermal cell originated from HUES64
+-1.51800210883109	-0.805240571327741	Homo sapiens esophagus muscularis mucosa tissue female adult (51 years)	Homo sapiens esophagus muscularis mucosa tissue female adult (51 years)
+2.32063227651789	-0.86114210822359	Homo sapiens esophagus squamous epithelium tissue female adult (53 years)	Homo sapiens esophagus squamous epithelium tissue female adult (53 years)
+2.15517714405768	-1.19486715038085	Homo sapiens esophagus squamous epithelium tissue male adult (54 years)	Homo sapiens esophagus squamous epithelium tissue male adult (54 years)
+-0.408083296054734	-1.35325835594358	Homo sapiens esophagus tissue female adult (30 years)	Homo sapiens esophagus tissue female adult (30 years)
+-1.43324425949903	-1.19157465231545	Homo sapiens adipose tissue tissue female adult (30 years)	Homo sapiens adipose tissue tissue female adult (30 years)
+-0.686938511351413	-1.49234766659165	Homo sapiens esophagus tissue male adult (34 years)	Homo sapiens esophagus tissue male adult (34 years)
+-0.255248118116986	-1.78973927177346	Homo sapiens gastroesophageal sphincter tissue female adult (53 years)	Homo sapiens gastroesophageal sphincter tissue female adult (53 years)
+0.973892559670092	-1.7352422126631	Homo sapiens gastroesophageal sphincter tissue male adult (54 years)	Homo sapiens gastroesophageal sphincter tissue male adult (54 years)
+20.5470531253353	1.72728555679167	Homo sapiens GM12878	Homo sapiens GM12878
+15.7870776199184	1.52400319663976	Homo sapiens GM23248	Homo sapiens GM23248
+-5.13452521170966	3.74863001135332	Homo sapiens H1	Homo sapiens H1
+-0.872754304462739	-0.606182499101086	Homo sapiens heart left ventricle tissue female adult (51 years)	Homo sapiens heart left ventricle tissue female adult (51 years)
+-0.760328500476131	-0.559448567690536	Homo sapiens heart left ventricle tissue female adult (53 years)	Homo sapiens heart left ventricle tissue female adult (53 years)
+-0.417808598822595	-1.13570506890484	Homo sapiens heart left ventricle tissue male adult (34 years)	Homo sapiens heart left ventricle tissue male adult (34 years)
+-1.35475439030179	-0.639836406088437	Homo sapiens heart left ventricle tissue male child (3 years)	Homo sapiens heart left ventricle tissue male child (3 years)
+-1.63502302981335	-0.782262137483149	Homo sapiens adipose tissue tissue male adult (34 years)	Homo sapiens adipose tissue tissue male adult (34 years)
+-0.571315317798165	-1.12114716458231	Homo sapiens heart right ventricle tissue male adult (34 years)	Homo sapiens heart right ventricle tissue male adult (34 years)
+-1.45190102074643	-0.887420180446266	Homo sapiens heart right ventricle tissue male child (3 years)	Homo sapiens heart right ventricle tissue male child (3 years)
+-3.04641286758484	2.33928407675994	Homo sapiens hepatocyte originated from H9	Homo sapiens hepatocyte originated from H9
+-6.47372486726128	4.36397365034004	Homo sapiens HUES64	Homo sapiens HUES64
+-3.42528011887563	0.183985508048924	Homo sapiens large intestine tissue male embryo (108 days)	Homo sapiens large intestine tissue male embryo (108 days)
+-0.134882107477586	-0.263446625953506	Homo sapiens liver tissue male child (3 years)	Homo sapiens liver tissue male child (3 years)
+-1.05151713340112	-1.39572778465662	Homo sapiens lower leg skin tissue female adult (51 years)	Homo sapiens lower leg skin tissue female adult (51 years)
+1.11282523228085	-1.19543104464272	Homo sapiens adipose tissue tissue male child (3 years)	Homo sapiens adipose tissue tissue male child (3 years)
+-0.968231262373285	-1.24652803882175	Homo sapiens lower leg skin tissue male adult (37 years)	Homo sapiens lower leg skin tissue male adult (37 years)
+-1.91864283207801	-0.83261793760075	Homo sapiens lung tissue female adult (30 years)	Homo sapiens lung tissue female adult (30 years)
+-3.51837721315811	-0.0618391392555784	Homo sapiens lung tissue male child (3 years)	Homo sapiens lung tissue male child (3 years)
+-1.81036815575649	3.98063744913613	Homo sapiens mesenchymal stem cell originated from H1	Homo sapiens mesenchymal stem cell originated from H1
+-4.79838557947601	4.71046612912885	Homo sapiens mesodermal cell originated from HUES64	Homo sapiens mesodermal cell originated from HUES64
+18.8526672747312	2.11064960953793	Homo sapiens motor neuron ALS-28-iPSC	Homo sapiens motor neuron ALS-28-iPSC
+20.0472845844983	2.26269908293467	Homo sapiens motor neuron ALS-29-iPSC	Homo sapiens motor neuron ALS-29-iPSC
+-2.34602499506956	4.36323769343065	Homo sapiens motor neuron ALS-52-iNPC	Homo sapiens motor neuron ALS-52-iNPC
+16.499559336291	1.96305156272329	Homo sapiens motor neuron ALS-52-iPSC	Homo sapiens motor neuron ALS-52-iPSC
+-2.03425508848884	4.73780821237957	Homo sapiens motor neuron ControlCS14-iNPC	Homo sapiens motor neuron ControlCS14-iNPC
+-0.826624539453726	-0.809605944582081	Homo sapiens adrenal gland tissue female adult (30 years)	Homo sapiens adrenal gland tissue female adult (30 years)
+-2.11457668782771	4.43056031780635	Homo sapiens motor neuron ControlCS14-iPSC	Homo sapiens motor neuron ControlCS14-iPSC
+14.1404995671762	2.22648149038933	Homo sapiens motor neuron ControlPGP-iNPC	Homo sapiens motor neuron ControlPGP-iNPC
+-2.12675173458824	4.44007843999831	Homo sapiens motor neuron ControlPGP-iPSC	Homo sapiens motor neuron ControlPGP-iPSC
+-0.947012258381141	4.84905052906317	Homo sapiens motor neuron ControlSMA-iPSC	Homo sapiens motor neuron ControlSMA-iPSC
+-0.345252890928759	-1.12758224835131	Homo sapiens muscle of leg tissue female embryo (113 days)	Homo sapiens muscle of leg tissue female embryo (113 days)
+-3.07123188119868	0.888957029151367	Homo sapiens natural killer cell male adult (37 years)	Homo sapiens natural killer cell male adult (37 years)
+0.820670658709283	-2.66718729938461	Homo sapiens ovary tissue female adult (30 years)	Homo sapiens ovary tissue female adult (30 years)
+-0.915323223083212	-1.87277001035512	Homo sapiens ovary tissue female adult (51 years)	Homo sapiens ovary tissue female adult (51 years)
+0.154297666717091	-2.20322142583217	Homo sapiens ovary tissue female adult (53 years)	Homo sapiens ovary tissue female adult (53 years)
+1.90725941285765	-1.27219685493479	Homo sapiens pancreas tissue female adult (30 years)	Homo sapiens pancreas tissue female adult (30 years)
+-0.382364345420121	-0.140495428835677	Homo sapiens adrenal gland tissue female adult (53 years)	Homo sapiens adrenal gland tissue female adult (53 years)
+5.34892361543989	-1.436680354699	Homo sapiens pancreas tissue male adult (34 years)	Homo sapiens pancreas tissue male adult (34 years)
+-1.21814372912848	-1.79662270508661	Homo sapiens prostate gland tissue male adult (54 years)	Homo sapiens prostate gland tissue male adult (54 years)
+0.0737762180718746	-2.26841481853674	Homo sapiens psoas muscle tissue female adult (30 years)	Homo sapiens psoas muscle tissue female adult (30 years)
+0.510578473936924	-2.35432973333641	Homo sapiens psoas muscle tissue male adult (34 years)	Homo sapiens psoas muscle tissue male adult (34 years)
+-0.678310718972326	-1.30101137434275	Homo sapiens psoas muscle tissue male child (3 years)	Homo sapiens psoas muscle tissue male child (3 years)
+-0.117750747910768	-1.44532790751303	Homo sapiens right cardiac atrium tissue male adult (34 years)	Homo sapiens right cardiac atrium tissue male adult (34 years)
+7.15929621213928	-0.686461246416743	Homo sapiens right lobe of liver tissue female adult (53 years)	Homo sapiens right lobe of liver tissue female adult (53 years)
+-0.550204356985518	-1.73453801795066	Homo sapiens sigmoid colon tissue male adult (34 years)	Homo sapiens sigmoid colon tissue male adult (34 years)
+-2.81906471637366	-0.200178058259089	Homo sapiens sigmoid colon tissue male child (3 years)	Homo sapiens sigmoid colon tissue male child (3 years)
+0.59095122645851	-0.574192981679353	Homo sapiens adrenal gland tissue male adult (34 years)	Homo sapiens adrenal gland tissue male adult (34 years)
+4.17623168775065	-0.885606506439213	Homo sapiens skeletal muscle myoblast	Homo sapiens skeletal muscle myoblast
+0.774737966917597	-1.3343002216734	Homo sapiens small intestine tissue female adult (30 years)	Homo sapiens small intestine tissue female adult (30 years)
+0.715517651324201	-2.09726836743552	Homo sapiens small intestine tissue male adult (34 years)	Homo sapiens small intestine tissue male adult (34 years)
+-1.16859882929911	-1.00246440877644	Homo sapiens small intestine tissue male child (3 years)	Homo sapiens small intestine tissue male child (3 years)
+-3.17554837274401	-0.100120058522258	Homo sapiens small intestine tissue male embryo (108 days)	Homo sapiens small intestine tissue male embryo (108 days)
+-3.16979236572763	2.77786102981181	Homo sapiens smooth muscle cell originated from H9	Homo sapiens smooth muscle cell originated from H9
+-1.89195572028641	-0.279184862384434	Homo sapiens spleen tissue female adult (30 years)	Homo sapiens spleen tissue female adult (30 years)
+-0.154809398325068	0.169703838857325	Homo sapiens spleen tissue female adult (51 years)	Homo sapiens spleen tissue female adult (51 years)
+-1.09576532033682	-0.0749671651779079	Homo sapiens spleen tissue male adult (34 years)	Homo sapiens spleen tissue male adult (34 years)
+-2.00184903143614	0.495206580225471	Homo sapiens spleen tissue male adult (37 years)	Homo sapiens spleen tissue male adult (37 years)
+1.053489508453	-0.380664434494997	Homo sapiens adrenal gland tissue male adult (54 years)	Homo sapiens adrenal gland tissue male adult (54 years)
+-3.70885847466767	0.375246709645121	Homo sapiens spleen tissue male child (3 years)	Homo sapiens spleen tissue male child (3 years)
+-0.25701198693739	-1.70857670991047	Homo sapiens stomach tissue female adult (30 years)	Homo sapiens stomach tissue female adult (30 years)
+-0.496324890865254	-1.36771927959435	Homo sapiens stomach tissue female adult (51 years)	Homo sapiens stomach tissue female adult (51 years)
+-2.82712171159676	-1.06146869555695	Homo sapiens stomach tissue female embryo (98 days)	Homo sapiens stomach tissue female embryo (98 days)
+-0.881919315430096	-1.7788150594695	Homo sapiens stomach tissue male adult (34 years)	Homo sapiens stomach tissue male adult (34 years)
+0.169234042012645	-1.25339910302559	Homo sapiens stomach tissue male adult (54 years)	Homo sapiens stomach tissue male adult (54 years)
+-1.17580460384892	-1.34325625126197	Homo sapiens stomach tissue male child (3 years)	Homo sapiens stomach tissue male child (3 years)
+-1.07084905599489	-1.3662636721511	Homo sapiens suprapubic skin tissue female adult (51 years)	Homo sapiens suprapubic skin tissue female adult (51 years)
+-0.551008501616729	1.46445426865602	Homo sapiens T-cell male adult (37 years)	Homo sapiens T-cell male adult (37 years)
+-1.91045573367264	-0.940155718184586	Homo sapiens testis tissue male adult (37 years)	Homo sapiens testis tissue male adult (37 years)
+-0.0370977795844031	-2.40305483093226	Homo sapiens aorta tissue female adult (30 years)	Homo sapiens aorta tissue female adult (30 years)
+-1.08904938380833	-0.852215638187934	Homo sapiens testis tissue male adult (54 years)	Homo sapiens testis tissue male adult (54 years)
+-5.70343005341884	1.29956281926467	Homo sapiens thymus tissue male child (3 years)	Homo sapiens thymus tissue male child (3 years)
+-2.5631644130701	-0.177473619065245	Homo sapiens thyroid gland tissue female adult (51 years)	Homo sapiens thyroid gland tissue female adult (51 years)
+-2.95492263040886	-0.0523467588954059	Homo sapiens thyroid gland tissue male adult (37 years)	Homo sapiens thyroid gland tissue male adult (37 years)
+-1.24204033348953	-0.971364526883483	Homo sapiens tibial nerve tissue female adult (53 years)	Homo sapiens tibial nerve tissue female adult (53 years)
+-1.5150649964385	-1.04845607171908	Homo sapiens tibial nerve tissue male adult (54 years)	Homo sapiens tibial nerve tissue male adult (54 years)
+0.0273368508937897	-0.672763061834415	Homo sapiens transverse colon tissue female adult (53 years)	Homo sapiens transverse colon tissue female adult (53 years)
+0.562410978521031	-0.762065808887616	Homo sapiens transverse colon tissue male adult (54 years)	Homo sapiens transverse colon tissue male adult (54 years)
+-1.66647512617234	-0.357667354436257	Homo sapiens upper lobe of left lung tissue female adult (51 years)	Homo sapiens upper lobe of left lung tissue female adult (51 years)
+-1.6196010602165	-0.309479012926905	Homo sapiens upper lobe of left lung tissue male adult (37 years)	Homo sapiens upper lobe of left lung tissue male adult (37 years)

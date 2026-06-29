@@ -371,19 +371,19 @@ entry_server <- function(
     tabsetPanel(
 
       tabPanel(
-        "Input RNA",
-        div(class = "coming-soon-box", "Input RNA UMAP coming soon.")
-      ),
+  "Input RNA",
+  plotlyOutput("entry_umap_input", height = "500px")
+),
 
-      tabPanel(
-        "Predicted DNAm",
-        div(class = "coming-soon-box", "Predicted DNAm UMAP coming soon.")
-      ),
+tabPanel(
+  "Predicted DNAm",
+  plotlyOutput("entry_umap_pred", height = "500px")
+),
 
-      tabPanel(
-        "Gold-standard DNAm",
-        div(class = "coming-soon-box", "Gold-standard DNAm UMAP coming soon.")
-      )
+tabPanel(
+  "Gold-standard DNAm",
+  plotlyOutput("entry_umap_gold", height = "500px")
+)
     )
   })
 
@@ -412,6 +412,30 @@ entry_server <- function(
       "Gold-standard DNAm — PCA"
     )
   })
+
+  output$entry_umap_input <- renderPlotly({
+  build_type_umap(
+    current_entry()$input_umap[1],
+    current_entry()$pca_group[1],
+    "Input RNA — UMAP"
+  )
+})
+
+output$entry_umap_pred <- renderPlotly({
+  build_type_umap(
+    current_entry()$predicted_umap[1],
+    current_entry()$pca_group[1],
+    "Predicted DNAm — UMAP"
+  )
+})
+
+output$entry_umap_gold <- renderPlotly({
+  build_type_umap(
+    current_entry()$output_umap[1],
+    current_entry()$pca_group[1],
+    "Gold-standard DNAm — UMAP"
+  )
+})
 
   # DOWNLOADS
 
