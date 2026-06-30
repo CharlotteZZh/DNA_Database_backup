@@ -1,0 +1,10 @@
+name: dna_database2
+title:
+username: methylprophetdb
+account: methylprophetdb
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17569460
+bundleId: 12202916
+url: https://methylprophetdb.shinyapps.io/dna_database2/
+version: 1
