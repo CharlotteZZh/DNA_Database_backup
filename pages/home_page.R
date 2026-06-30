@@ -5,11 +5,15 @@ home_ui <- function() {
   fluidPage(
 
     div(
-      style = "max-width:1650px; margin:auto;",
+      style = "max-width:1650px; margin:auto; padding:0;" ,
 
       # HERO
       div(
         class = "hero-section",
+        style = "
+    padding-top:8px;
+    padding-bottom:8px;
+  ",
 
         h1(class = "hero-title", "MethylProphet DB"),
 

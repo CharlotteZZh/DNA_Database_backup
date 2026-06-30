@@ -42,7 +42,7 @@ HERO
 .hero-section {
   position: relative;
   border-radius: 36px;
-  padding: 14px 120px;
+  padding: 55px 120px 25px 120px !important;
   margin-top: 12px;
   margin-bottom: 24px;
   text-align: center;
@@ -75,22 +75,24 @@ HERO
 }
 
 .hero-section::before {
-  width: 320px;
-  height: 320px;
+  width: 240px;
+  height: 240px;
   background: #2DD4BF;
-  top: -120px;
-  left: -100px;
+  top: -80px;
+  left: -60px;
   animation: float1 14s infinite ease-in-out;
 }
 
 .hero-section::after {
-  width: 260px;
-  height: 260px;
+  width: 180px;
+  height: 180px;
   background: #7DD3FC;
-  bottom: -90px;
-  right: -90px;
+  bottom: 10px;
+  right: 20px;
   animation: float2 16s infinite ease-in-out;
 }
+
+/* content */
 
 .hero-title,
 .hero-subtitle,
@@ -114,18 +116,16 @@ HERO
   font-size: 20px;
   font-weight: 500;
   opacity: 0.95;
-  margin: 4px 0 !important;
-  padding: 0 !important;
-  line-height: 1.1;
+  margin: 10px 0 8px 0 !important;
+  line-height: 1.15;
   color: rgba(255,255,255,0.95);
 }
 
 .hero-text {
   font-size: 16px;
-  line-height: 1.2;
+  line-height: 1.35;
   max-width: 1350px;
-  margin: 4px auto 8px auto !important;
-  padding: 0 !important;
+  margin: 0 auto 14px auto !important;
   opacity: 0.90;
   color: rgba(255,255,255,0.88);
 }
