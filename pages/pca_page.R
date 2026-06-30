@@ -2,7 +2,7 @@ library(shiny)
 library(plotly)
 
 # =====================================================
-# PCA RENDER HELPERS
+# NORMALIZE PCA DATA
 # =====================================================
 
 normalise_pca_df <- function(obj) {
@@ -70,6 +70,63 @@ normalise_pca_df <- function(obj) {
 }
 
 # =====================================================
+# CLEAN LABELS
+# =====================================================
+
+clean_labels <- function(df, path, entry_group = NULL) {
+
+  if (grepl("encode", path, ignore.case = TRUE)) {
+
+    df$group <- gsub("^Homo sapiens ", "", df$group, ignore.case = TRUE)
+    df$group <- gsub("^Mus musculus ", "", df$group, ignore.case = TRUE)
+    df$group <- gsub(" tissue", "", df$group, ignore.case = TRUE)
+
+    df$group <- gsub(" male adult \\(.*?\\)", "", df$group)
+    df$group <- gsub(" female adult \\(.*?\\)", "", df$group)
+    df$group <- gsub(" male child \\(.*?\\)", "", df$group)
+    df$group <- gsub(" female child \\(.*?\\)", "", df$group)
+
+    df$group <- gsub(
+      " originated from ",
+      " ",
+      df$group,
+      ignore.case = TRUE
+    )
+
+    df$group <- gsub("_", " ", df$group)
+
+    # PBMC relabeling
+    df$group <- gsub("^B Cell$", "Peripheral Blood", df$group, ignore.case = TRUE)
+    df$group <- gsub("^Cd14-Positive Monocyte$", "Peripheral Blood", df$group, ignore.case = TRUE)
+    df$group <- gsub("^T-Cell$", "Peripheral Blood", df$group, ignore.case = TRUE)
+    df$group <- gsub("^Natural Killer Cell$", "Peripheral Blood", df$group, ignore.case = TRUE)
+
+    df$group <- trimws(df$group)
+    df$group <- tools::toTitleCase(df$group)
+
+    df$group <- substr(df$group, 1, 35)
+
+    if (!is.null(entry_group)) {
+      entry_group <- gsub("^Homo sapiens ", "", entry_group, ignore.case = TRUE)
+      entry_group <- gsub("^Mus musculus ", "", entry_group, ignore.case = TRUE)
+      entry_group <- gsub(" tissue", "", entry_group, ignore.case = TRUE)
+      entry_group <- gsub("_", " ", entry_group)
+
+      entry_group <- gsub("^B Cell$", "Peripheral Blood", entry_group, ignore.case = TRUE)
+      entry_group <- gsub("^Cd14-Positive Monocyte$", "Peripheral Blood", entry_group, ignore.case = TRUE)
+      entry_group <- gsub("^T-Cell$", "Peripheral Blood", entry_group, ignore.case = TRUE)
+      entry_group <- gsub("^Natural Killer Cell$", "Peripheral Blood", entry_group, ignore.case = TRUE)
+
+      entry_group <- trimws(entry_group)
+      entry_group <- tools::toTitleCase(entry_group)
+      entry_group <- substr(entry_group, 1, 35)
+    }
+  }
+
+  list(df = df, entry_group = entry_group)
+}
+
+# =====================================================
 # BUILD PCA
 # =====================================================
 
@@ -88,38 +145,15 @@ build_type_pca <- function(
 
   df <- normalise_pca_df(df)
 
+  cleaned <- clean_labels(df, path, entry_group)
+  df <- cleaned$df
+  entry_group <- cleaned$entry_group
+
   pve <- attr(df, "pve")
-
-  if (grepl("encode", path, ignore.case = TRUE)) {
-
-    df$group <- gsub("^Homo sapiens ", "", df$group, ignore.case = TRUE)
-    df$group <- gsub(" tissue", "", df$group, ignore.case = TRUE)
-    df$group <- gsub(" male adult \\(.*?\\)", "", df$group)
-    df$group <- gsub(" female adult \\(.*?\\)", "", df$group)
-    df$group <- gsub(" male child \\(.*?\\)", "", df$group)
-    df$group <- gsub(" female child \\(.*?\\)", "", df$group)
-
-    df$group <- gsub("_", " ", df$group)
-    df$group <- trimws(df$group)
-    df$group <- tools::toTitleCase(df$group)
-
-    if (!is.null(entry_group)) {
-      entry_group <- gsub("^Homo sapiens ", "", entry_group, ignore.case = TRUE)
-      entry_group <- gsub(" tissue", "", entry_group, ignore.case = TRUE)
-      entry_group <- gsub("_", " ", entry_group)
-      entry_group <- trimws(entry_group)
-      entry_group <- tools::toTitleCase(entry_group)
-    }
-  }
 
   df$hover_text <- paste0(
     "<b>", df$name, "</b>",
-    "<br>Group: ", df$group,
-    ifelse(
-      is.na(df$celltype),
-      "",
-      paste0("<br>Cell type: ", df$celltype)
-    )
+    "<br>Group: ", df$group
   )
 
   x_lab <- if (!is.null(pve)) {
@@ -143,8 +177,47 @@ build_type_pca <- function(
     color = ~group,
     text = ~hover_text,
     hoverinfo = "text",
-    marker = list(size = 7, opacity = 0.55)
+    marker = list(
+      size = 7,
+      opacity = 0.55
+    )
   )
+
+  if (!is.null(entry_group)) {
+
+    hl <- df[
+      grepl(
+        tolower(entry_group),
+        tolower(df$group),
+        fixed = TRUE
+      ),
+      ,
+      drop = FALSE
+    ]
+
+    if (nrow(hl) > 0) {
+
+      p <- p %>%
+        add_trace(
+          data = hl,
+          x = ~PC1,
+          y = ~PC2,
+          type = "scatter",
+          mode = "markers",
+          marker = list(
+            symbol = "diamond",
+            size = 10,
+            color = "#F59E0B",
+            line = list(
+              color = "black",
+              width = 2
+            )
+          ),
+          name = paste0(entry_group, " (selected)"),
+          inherit = FALSE
+        )
+    }
+  }
 
   p %>%
     layout(
@@ -172,21 +245,19 @@ build_type_umap <- function(
     stringsAsFactors = FALSE
   )
 
-  if (!"group" %in% colnames(df)) df$group <- "Sample"
+  if (!"group" %in% colnames(df)) df$group <- df[[3]]
   if (!"name" %in% colnames(df)) df$name <- rownames(df)
-  if (!"celltype" %in% colnames(df)) df$celltype <- NA_character_
+
+  cleaned <- clean_labels(df, path, entry_group)
+  df <- cleaned$df
+  entry_group <- cleaned$entry_group
 
   df$hover_text <- paste0(
     "<b>", df$name, "</b>",
-    "<br>Group: ", df$group,
-    ifelse(
-      is.na(df$celltype),
-      "",
-      paste0("<br>Cell type: ", df$celltype)
-    )
+    "<br>Group: ", df$group
   )
 
-  plot_ly(
+  p <- plot_ly(
     data = df,
     x = ~UMAP1,
     y = ~UMAP2,
@@ -195,8 +266,49 @@ build_type_umap <- function(
     color = ~group,
     text = ~hover_text,
     hoverinfo = "text",
-    marker = list(size = 7, opacity = 0.55)
-  ) %>%
+    marker = list(
+      size = 7,
+      opacity = 0.55
+    )
+  )
+
+  if (!is.null(entry_group)) {
+
+    hl <- df[
+      grepl(
+        tolower(entry_group),
+        tolower(df$group),
+        fixed = TRUE
+      ),
+      ,
+      drop = FALSE
+    ]
+
+    if (nrow(hl) > 0) {
+
+      p <- p %>%
+        add_trace(
+          data = hl,
+          x = ~UMAP1,
+          y = ~UMAP2,
+          type = "scatter",
+          mode = "markers",
+          marker = list(
+            symbol = "diamond",
+            size = 10,
+            color = "#F59E0B",
+            line = list(
+              color = "black",
+              width = 2
+            )
+          ),
+          name = paste0(entry_group, " (selected)"),
+          inherit = FALSE
+        )
+    }
+  }
+
+  p %>%
     layout(
       title = title,
       legend = list(title = list(text = "Group")),
@@ -227,9 +339,6 @@ build_variance <- function(
 
   if (is.null(pve)) return(NULL)
 
-  cumvar <- cumsum(pve)
-  n90 <- which(cumvar >= 90)[1]
-
   plot_df <- data.frame(
     PC = seq_along(pve),
     Variance = pve
@@ -243,14 +352,7 @@ build_variance <- function(
     mode = "lines+markers"
   ) %>%
     layout(
-      title = paste0(
-        title,
-        if (!is.na(n90)) {
-          paste0("<br>", n90, " PCs explain 90% variance")
-        } else {
-          ""
-        }
-      ),
+      title = title,
       xaxis = list(title = "Principal Component"),
       yaxis = list(title = "Variance Explained (%)")
     )

@@ -116,7 +116,6 @@ entry_server <- function(
 
     div(
 
-      # HEADER
       h2(
         style="
           font-size:38px;
@@ -152,7 +151,6 @@ entry_server <- function(
         )
       ),
 
-      # BADGE
       div(
         style="
           display:inline-block;
@@ -171,10 +169,7 @@ entry_server <- function(
         )
       ),
 
-      # =========================================
       # ENTRY STATS
-      # =========================================
-
       div(
         class = "mini-meta-card",
 
@@ -202,28 +197,19 @@ entry_server <- function(
           div(
             class = "meta-stat",
             h5("CpGs"),
-            p(
-              format(
-                current_entry()$n_cpgs_total[1],
-                big.mark = ","
-              )
-            )
+            p(format(current_entry()$n_cpgs_total[1], big.mark = ","))
           ),
 
           div(
             class = "meta-stat",
             h5("β"),
             p(
-              if (
-                !is.na(current_entry()$beta_mean_total[1]) &&
-                current_entry()$beta_mean_total[1] != ""
-              )
-                round(
-                  as.numeric(current_entry()$beta_mean_total[1]),
-                  3
-                )
-              else
+              if (!is.na(current_entry()$beta_mean_total[1]) &&
+                  current_entry()$beta_mean_total[1] != "") {
+                round(as.numeric(current_entry()$beta_mean_total[1]), 3)
+              } else {
                 "N/A"
+              }
             )
           ),
 
@@ -231,27 +217,20 @@ entry_server <- function(
             class = "meta-stat",
             h5("Expr"),
             p(
-              if (
-                !is.na(current_entry()$Expr_mean_total[1]) &&
-                current_entry()$Expr_mean_total[1] != ""
-              )
-                round(
-                  as.numeric(current_entry()$Expr_mean_total[1]),
-                  3
-                )
-              else
+              if (!is.na(current_entry()$Expr_mean_total[1]) &&
+                  current_entry()$Expr_mean_total[1] != "") {
+                round(as.numeric(current_entry()$Expr_mean_total[1]), 3)
+              } else {
                 "N/A"
+              }
             )
           )
         )
       ),
 
-      div(style="height:6px;"),
+      div(style = "height:6px;"),
 
-      # =========================================
       # DATASET STATS
-      # =========================================
-
       div(
         class = "mini-meta-card",
 
@@ -269,12 +248,7 @@ entry_server <- function(
           div(
             class = "meta-stat",
             h5("CpGs"),
-            p(
-              format(
-                current_entry()$n_cpgs_total[1],
-                big.mark = ","
-              )
-            )
+            p(format(current_entry()$n_cpgs_total[1], big.mark = ","))
           ),
 
           div(
@@ -307,7 +281,7 @@ entry_server <- function(
     paste(
       "This entry represents a tissue- or cohort-specific subset of the",
       current_entry()$dataset[1],
-      "dataset. Interactive PCA embeddings are computed at the full dataset level to preserve global biological structure and enable cross-tissue or cross-cohort comparisons."
+      "dataset. Interactive PCA and UMAP embeddings are computed at the full dataset level to preserve global biological structure and enable cross-tissue or cross-cohort comparisons."
     )
   })
 
@@ -371,28 +345,30 @@ entry_server <- function(
     tabsetPanel(
 
       tabPanel(
-  "Input RNA",
-  plotlyOutput("entry_umap_input", height = "500px")
-),
+        "Input RNA",
+        plotlyOutput("entry_umap_input", height = "500px")
+      ),
 
-tabPanel(
-  "Predicted DNAm",
-  plotlyOutput("entry_umap_pred", height = "500px")
-),
+      tabPanel(
+        "Predicted DNAm",
+        plotlyOutput("entry_umap_pred", height = "500px")
+      ),
 
-tabPanel(
-  "Gold-standard DNAm",
-  plotlyOutput("entry_umap_gold", height = "500px")
-)
+      tabPanel(
+        "Gold-standard DNAm",
+        plotlyOutput("entry_umap_gold", height = "500px")
+      )
     )
   })
 
-  # PCA plots
+  # =========================================
+  # PCA PLOTS
+  # =========================================
 
   output$entry_pca_input <- renderPlotly({
     build_type_pca(
       current_entry()$input_pca[1],
-      current_entry()$pca_group[1],
+      current_entry()$tissue[1],
       "Input RNA — PCA"
     )
   })
@@ -400,7 +376,7 @@ tabPanel(
   output$entry_pca_pred <- renderPlotly({
     build_type_pca(
       current_entry()$predicted_pca[1],
-      current_entry()$pca_group[1],
+      current_entry()$tissue[1],
       "Predicted DNAm — PCA"
     )
   })
@@ -408,36 +384,42 @@ tabPanel(
   output$entry_pca_gold <- renderPlotly({
     build_type_pca(
       current_entry()$output_pca[1],
-      current_entry()$pca_group[1],
+      current_entry()$tissue[1],
       "Gold-standard DNAm — PCA"
     )
   })
 
+  # =========================================
+  # UMAP PLOTS
+  # =========================================
+
   output$entry_umap_input <- renderPlotly({
-  build_type_umap(
-    current_entry()$input_umap[1],
-    current_entry()$pca_group[1],
-    "Input RNA — UMAP"
-  )
-})
+    build_type_umap(
+      current_entry()$input_umap[1],
+      current_entry()$tissue[1],
+      "Input RNA — UMAP"
+    )
+  })
 
-output$entry_umap_pred <- renderPlotly({
-  build_type_umap(
-    current_entry()$predicted_umap[1],
-    current_entry()$pca_group[1],
-    "Predicted DNAm — UMAP"
-  )
-})
+  output$entry_umap_pred <- renderPlotly({
+    build_type_umap(
+      current_entry()$predicted_umap[1],
+      current_entry()$tissue[1],
+      "Predicted DNAm — UMAP"
+    )
+  })
 
-output$entry_umap_gold <- renderPlotly({
-  build_type_umap(
-    current_entry()$output_umap[1],
-    current_entry()$pca_group[1],
-    "Gold-standard DNAm — UMAP"
-  )
-})
+  output$entry_umap_gold <- renderPlotly({
+    build_type_umap(
+      current_entry()$output_umap[1],
+      current_entry()$tissue[1],
+      "Gold-standard DNAm — UMAP"
+    )
+  })
 
+  # =========================================
   # DOWNLOADS
+  # =========================================
 
   output$prediction_download <- renderUI({
     tags$a(
