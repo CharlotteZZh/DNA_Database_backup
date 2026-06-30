@@ -5,17 +5,16 @@ home_ui <- function() {
   fluidPage(
 
     div(
-      style = "max-width:1650px; margin:auto; padding:0;" ,
+      style = "max-width:1650px; margin:auto; padding:0;",
 
       # HERO
       div(
         class = "hero-section",
-        style = "
-    padding-top:8px;
-    padding-bottom:8px;
-  ",
 
-        h1(class = "hero-title", "MethylProphet DB"),
+        h1(
+          class = "hero-title",
+          "MethylProphetDB"
+        ),
 
         h3(
           class = "hero-subtitle",
@@ -33,7 +32,7 @@ home_ui <- function() {
 
         actionButton(
           "start_exploring",
-          "Start Exploring",
+          "Explore Datasets",
           class = "main-button"
         )
       )
@@ -58,7 +57,9 @@ home_ui <- function() {
 
           h3("Interactive PCA"),
 
-          p("Visualize tissue and cell-type methylation landscapes interactively.")
+          p(
+            "Visualize tissue and cell-type methylation landscapes interactively."
+          )
         )
       ),
 
@@ -76,7 +77,9 @@ home_ui <- function() {
 
           h3("UMAP Embeddings"),
 
-          p("Explore nonlinear methylation structure across single-cell and spatial datasets.")
+          p(
+            "Explore nonlinear methylation structure across single-cell and spatial datasets."
+          )
         )
       ),
 
@@ -94,7 +97,9 @@ home_ui <- function() {
 
           h3("Prediction Workflow"),
 
-          p("Reconstruct genome-wide methylation landscapes from transcriptomic measurements.")
+          p(
+            "Reconstruct genome-wide methylation landscapes from transcriptomic measurements."
+          )
         )
       )
     ),
@@ -161,22 +166,31 @@ home_ui <- function() {
     br(),
     br(),
 
-    # ===== ABOUT CONTENT (APPENDED) =====
-
+    # OVERVIEW
     div(
       class = "feature-card",
       style = "border-left:8px solid #14B8A6;",
+
       h2("Overview"),
-      p("MethylProphetDB is a public database of predicted DNA methylation landscapes reconstructed from transcriptomic data."),
-      p("The current release integrates ENCODE, GTEx, TCGA, and ENCODE4 single-cell datasets together with matched gold-standard methylation profiles.")
+
+      p(
+        "MethylProphetDB is a public database of predicted DNA methylation landscapes reconstructed from transcriptomic data."
+      ),
+
+      p(
+        "The current release integrates ENCODE, GTEx, TCGA, and ENCODE4 single-cell datasets together with matched gold-standard methylation profiles."
+      )
     ),
 
     br(),
 
+    # DATA SOURCES
     div(
       class = "feature-card",
       style = "border-left:8px solid #3B82F6;",
+
       h2("Data Sources"),
+
       tags$ul(
         tags$li(strong("ENCODE bulk: "), "paired bulk RNA-seq and WGBS"),
         tags$li(strong("GTEx: "), "bulk RNA-seq across normal tissues"),
@@ -187,10 +201,13 @@ home_ui <- function() {
 
     br(),
 
+    # CURRENT DATABASE CONTENT
     div(
       class = "feature-card",
       style = "border-left:8px solid #8B5CF6;",
+
       h2("Current Database Content"),
+
       tags$ul(
         tags$li("ENCODE bulk: 95 matched samples"),
         tags$li("GTEx: 9 tissues"),
@@ -202,10 +219,13 @@ home_ui <- function() {
 
     br(),
 
+    # AVAILABLE DATA TYPES
     div(
       class = "feature-card",
       style = "border-left:8px solid #F59E0B;",
+
       h2("Available Data Types"),
+
       tags$ul(
         tags$li("Input RNA matrices"),
         tags$li("Predicted DNA methylation matrices"),
@@ -217,11 +237,17 @@ home_ui <- function() {
 
     br(),
 
+    # PCA
     div(
       class = "feature-card",
       style = "border-left:8px solid #EF4444;",
+
       h2("Interactive PCA Visualization"),
-      p("PCA is performed on highly variable CpG loci to preserve methylation structure."),
+
+      p(
+        "PCA is performed on highly variable CpG loci to preserve methylation structure."
+      ),
+
       tags$ul(
         tags$li("Input RNA"),
         tags$li("Predicted DNAm"),
@@ -231,10 +257,13 @@ home_ui <- function() {
 
     br(),
 
+    # APPLICATIONS
     div(
       class = "feature-card",
       style = "border-left:8px solid #06B6D4;",
+
       h2("Applications"),
+
       tags$ul(
         tags$li("Cross-tissue methylation analysis"),
         tags$li("Pan-cancer epigenomics"),
@@ -245,20 +274,30 @@ home_ui <- function() {
 
     br(),
 
+    # FUTURE EXPANSION
     div(
       class = "feature-card",
       style = "border-left:8px solid #10B981;",
+
       h2("Future Expansion"),
-      p("Future releases will expand to Human Cell Atlas, Recount2, and spatial transcriptomics.")
+
+      p(
+        "Future releases will expand to Human Cell Atlas, Recount2, and spatial transcriptomics."
+      )
     ),
 
     br(),
 
+    # ACKNOWLEDGEMENTS
     div(
       class = "feature-card",
       style = "background: linear-gradient(135deg,#F8FAFC,#EFF6FF); border:none;",
+
       h2("Acknowledgements"),
-      p("We acknowledge ENCODE, GTEx, TCGA, and the broader scientific community for generating the foundational datasets used in this resource.")
+
+      p(
+        "We acknowledge ENCODE, GTEx, TCGA, and the broader scientific community for generating the foundational datasets used in this resource."
+      )
     )
   )
 }
@@ -271,7 +310,7 @@ home_server <- function(input, output, session) {
       updateNavbarPage(
         session,
         "main_navbar",
-        selected = "Explore"
+        selected = "Datasets"
       )
     }
   )
