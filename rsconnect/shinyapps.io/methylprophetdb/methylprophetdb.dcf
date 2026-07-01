@@ -5,6 +5,6 @@ account: methylprophetdb
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17569469
-bundleId: 12202936
+bundleId: 12203965
 url: https://methylprophetdb.shinyapps.io/methylprophetdb/
 version: 1

@@ -72,24 +72,21 @@ normalise_pca_df <- function(obj) {
 
 clean_labels <- function(df, path, entry_group = NULL) {
 
-  # ENCODE SINGLE-CELL
+  # ---------------- ENCODE SC ----------------
   if (grepl("encode_sc", path, ignore.case = TRUE)) {
 
     df$group <- gsub("^level3-Homo_sapiens-", "", df$group, ignore.case = TRUE)
     df$group <- gsub("-adult_child\\.rds$", "", df$group, ignore.case = TRUE)
 
-    # keep only tissue
     parts <- strsplit(df$group, "-")
 
-df$group <- sapply(parts, function(x) {
-
-  if (length(x) >= 2) {
-    x[1]
-  } else {
-    x[1]
-  }
-
-})
+    df$group <- sapply(parts, function(x) {
+      if (length(x) >= 2) {
+        x[1]
+      } else {
+        x[1]
+      }
+    })
 
     df$group <- gsub("_", " ", df$group)
     df$group <- tools::toTitleCase(df$group)
@@ -99,6 +96,7 @@ df$group <- sapply(parts, function(x) {
       entry_group <- tools::toTitleCase(entry_group)
     }
 
+  # ---------------- ENCODE BULK ----------------
   } else if (grepl("encode", path, ignore.case = TRUE)) {
 
     df$group <- gsub("^Homo sapiens ", "", df$group, ignore.case = TRUE)
@@ -121,7 +119,6 @@ df$group <- sapply(parts, function(x) {
 
     df$group <- trimws(df$group)
     df$group <- tools::toTitleCase(df$group)
-    df$group <- substr(df$group, 1, 35)
 
     if (!is.null(entry_group)) {
       entry_group <- gsub("_", " ", entry_group)
@@ -137,8 +134,11 @@ df$group <- sapply(parts, function(x) {
 # =====================================================
 
 match_entry <- function(df_group, entry_group) {
-  gsub("[^a-z]", "", tolower(df_group)) ==
-    gsub("[^a-z]", "", tolower(entry_group))
+
+  clean_df <- gsub("[^a-z]", "", tolower(df_group))
+  clean_entry <- gsub("[^a-z]", "", tolower(entry_group))
+
+  clean_df == clean_entry | startsWith(clean_df, clean_entry)
 }
 
 # =====================================================
@@ -147,11 +147,18 @@ match_entry <- function(df_group, entry_group) {
 
 build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
 
-  df <- read.table(gzfile(path), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+  df <- read.table(
+    gzfile(path),
+    header = TRUE,
+    sep = "\t",
+    stringsAsFactors = FALSE
+  )
 
   df <- normalise_pca_df(df)
 
-  if (grepl("encode_sc", path, ignore.case = TRUE) && !"group" %in% colnames(df)) {
+  # only fallback if group truly missing
+  if (grepl("encode_sc", path, ignore.case = TRUE) &&
+      !"group" %in% colnames(df)) {
     df$group <- df$name
   }
 
@@ -165,8 +172,17 @@ build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
     "<b>", df$name, "</b><br>Group: ", df$group
   )
 
-  x_lab <- if (!is.null(pve)) paste0("PC1 (", round(pve[1], 1), "%)") else "PC1"
-  y_lab <- if (!is.null(pve)) paste0("PC2 (", round(pve[2], 1), "%)") else "PC2"
+  x_lab <- if (!is.null(pve)) {
+    paste0("PC1 (", round(pve[1], 1), "%)")
+  } else {
+    "PC1"
+  }
+
+  y_lab <- if (!is.null(pve)) {
+    paste0("PC2 (", round(pve[2], 1), "%)")
+  } else {
+    "PC2"
+  }
 
   p <- plot_ly(
     data = df,
@@ -177,11 +193,19 @@ build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
     color = ~group,
     text = ~hover_text,
     hoverinfo = "text",
-    marker = list(size = 7, opacity = 0.55)
+    marker = list(
+      size = 7,
+      opacity = 0.55
+    )
   )
 
   if (!is.null(entry_group)) {
-    hl <- df[match_entry(df$group, entry_group), , drop = FALSE]
+
+    hl <- df[
+      match_entry(df$group, entry_group),
+      ,
+      drop = FALSE
+    ]
 
     if (nrow(hl) > 0) {
       p <- p %>%
@@ -195,7 +219,10 @@ build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
             symbol = "diamond",
             size = 11,
             color = "#F59E0B",
-            line = list(color = "black", width = 2)
+            line = list(
+              color = "black",
+              width = 2
+            )
           ),
           name = paste0(entry_group, " (selected)"),
           inherit = FALSE
@@ -218,7 +245,12 @@ build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
 
 build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
 
-  df <- read.table(gzfile(path), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+  df <- read.table(
+    gzfile(path),
+    header = TRUE,
+    sep = "\t",
+    stringsAsFactors = FALSE
+  )
 
   if ("generaltissue" %in% colnames(df)) {
     df$group <- df$generaltissue
@@ -255,11 +287,19 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
     color = ~group,
     text = ~hover_text,
     hoverinfo = "text",
-    marker = list(size = 7, opacity = 0.55)
+    marker = list(
+      size = 7,
+      opacity = 0.55
+    )
   )
 
   if (!is.null(entry_group)) {
-    hl <- df[match_entry(df$group, entry_group), , drop = FALSE]
+
+    hl <- df[
+      match_entry(df$group, entry_group),
+      ,
+      drop = FALSE
+    ]
 
     if (nrow(hl) > 0) {
       p <- p %>%
@@ -273,7 +313,10 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
             symbol = "diamond",
             size = 11,
             color = "#F59E0B",
-            line = list(color = "black", width = 2)
+            line = list(
+              color = "black",
+              width = 2
+            )
           ),
           name = paste0(entry_group, " (selected)"),
           inherit = FALSE
@@ -296,7 +339,12 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
 
 build_variance <- function(path, title = "Variance Explained") {
 
-  df <- read.table(gzfile(path), header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+  df <- read.table(
+    gzfile(path),
+    header = TRUE,
+    sep = "\t",
+    stringsAsFactors = FALSE
+  )
 
   df <- normalise_pca_df(df)
   pve <- attr(df, "pve")
