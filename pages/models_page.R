@@ -218,7 +218,7 @@ models_ui <- function() {
               p("RNA-seq, scRNA-seq, spatial transcriptomics"),
               
               h4("Output"),
-              p("Predicted methylation beta values")
+              p("DNA methylation beta values")
             ),
             
             br(),
