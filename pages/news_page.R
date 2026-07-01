@@ -35,9 +35,9 @@ news_ui <- function() {
 
         tags$ul(
           tags$li("New TCGA UMAP embeddings added."),
-          tags$li("ENCODE bulk predicted DNAm updated."),
-          tags$li("GTEx pan-tissue PCA labels refined."),
-          tags$li("MethylProphetDB public deployment is now live.")
+          tags$li("......"),
+          tags$li("......"),
+          tags$li("......")
         )
       ),
 

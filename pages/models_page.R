@@ -36,7 +36,6 @@ models_ui <- function() {
       fluidRow(
         
         # DREAMLAND
-        
         column(
           4,
           
@@ -88,71 +87,20 @@ models_ui <- function() {
             tags$a(
               href = "#",
               class = "btn btn-primary",
-              "Pretrained Weights (coming soon)"
-            )
-          )
-        ),
-        
-        # RAMP
-        
-        column(
-          4,
-          
-          div(
-            class = "feature-card",
-            style = "
-              border-top: 8px solid #F59E0B;
-              min-height:650px;
-            ",
-            
-            h2("Ramp"),
-            
-            div(
-              style="
-                display:inline-block;
-                background:#FEF3C7;
-                color:#B45309;
-                padding:6px 14px;
-                border-radius:999px;
-                font-size:13px;
-                font-weight:700;
-                margin-bottom:18px;
-              ",
-              "Ridge Regression"
+              "Download Model"
             ),
             
-            p(
-              "Ramp is a ridge-regression-based baseline model for DNA methylation prediction. It learns linear associations between gene expression and CpG methylation and provides fast, interpretable methylome reconstruction."
-            ),
-            
-            br(),
-            
-            div(
-              style="
-                background:#FFFBEB;
-                padding:18px;
-                border-radius:18px;
-              ",
-              
-              h4("Input"),
-              p("Bulk RNA-seq"),
-              
-              h4("Output"),
-              p("Predicted methylation beta values")
-            ),
-            
-            br(),
+            br(), br(),
             
             tags$a(
               href = "#",
-              class = "btn btn-primary",
-              "Pretrained Weights (coming soon)"
+              class = "btn btn-outline-primary",
+              "Pretrained Weights"
             )
           )
         ),
         
         # METHYLPROPHET
-        
         column(
           4,
           
@@ -202,10 +150,83 @@ models_ui <- function() {
             br(),
             
             tags$a(
+              href = "#",
+              class = "btn btn-primary",
+              "Download Model"
+            ),
+            
+            br(), br(),
+            
+            tags$a(
               href = "https://github.com/xk-huang/MethylProphet",
               target = "_blank",
-              class = "btn btn-primary",
+              class = "btn btn-outline-primary",
               "GitHub Repository"
+            ),
+            
+            br(), br(),
+            
+            tags$a(
+              href = "#",
+              class = "btn btn-outline-primary",
+              "Pretrained Weights"
+            )
+          )
+        ),
+        
+        # RAMP
+        column(
+          4,
+          
+          div(
+            class = "feature-card",
+            style = "
+              border-top: 8px solid #F59E0B;
+              min-height:650px;
+            ",
+            
+            h2("Ramp"),
+            
+            div(
+              style="
+                display:inline-block;
+                background:#FEF3C7;
+                color:#B45309;
+                padding:6px 14px;
+                border-radius:999px;
+                font-size:13px;
+                font-weight:700;
+                margin-bottom:18px;
+              ",
+              "Ridge Regression"
+            ),
+            
+            p(
+              "Ramp is a ridge-regression-based baseline model for DNA methylation prediction. It learns linear associations between gene expression and CpG methylation and provides fast, interpretable methylome reconstruction."
+            ),
+            
+            br(),
+            
+            div(
+              style="
+                background:#FFFBEB;
+                padding:18px;
+                border-radius:18px;
+              ",
+              
+              h4("Input"),
+              p("RNA-seq, scRNA-seq, spatial transcriptomics"),
+              
+              h4("Output"),
+              p("Predicted methylation beta values")
+            ),
+            
+            br(),
+            
+            tags$a(
+              href = "#",
+              class = "btn btn-primary",
+              "Download Model"
             )
           )
         )
@@ -254,7 +275,7 @@ models_ui <- function() {
             tags$tr(
               tags$td("Ramp"),
               tags$td("Ridge Regression"),
-              tags$td("RNA"),
+              tags$td("RNA / scRNA / Spatial"),
               tags$td("DNA methylation"),
               tags$td("Fast and interpretable")
             ),
@@ -285,9 +306,14 @@ models_ui <- function() {
         h2("Resources"),
         
         tags$ul(
-          tags$li(tags$a("MethylProphet GitHub", href = "https://github.com/xk-huang/MethylProphet", target = "_blank")),
-          tags$li(tags$a("OpenReview Paper", href = "https://openreview.net/forum?id=8wQ7Oc08vo", target = "_blank")),
-          tags$li("Pretrained weights (coming soon)"),
+          tags$li(
+            tags$a(
+              "OpenReview Paper",
+              href = "https://openreview.net/forum?id=8wQ7Oc08vo",
+              target = "_blank"
+            )
+          ),
+          tags$li("Model download links"),
           tags$li("User manuals (coming soon)")
         )
       )
