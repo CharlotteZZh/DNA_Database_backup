@@ -176,100 +176,74 @@ entry_server <- function(
         h4("Entry"),
 
         div(
-          class = "meta-grid",
+  class = "meta-grid",
 
-          div(
-            class = "meta-stat",
-            h5("Tissue"),
-            p(
-              tools::toTitleCase(
-                gsub("_", " ", current_entry()$tissue[1])
-              )
-            )
-          ),
+  div(
+    class = "meta-stat",
+    h5("Tissue"),
+    p(
+      tools::toTitleCase(
+        gsub("_", " ", current_entry()$tissue[1])
+      )
+    )
+  ),
 
-          div(
-            class = "meta-stat",
-            h5("n"),
-            p(current_entry()$n_samples_per_tissue[1])
-          ),
+  div(
+    class = "meta-stat",
+    h5("Samples"),
+    p(format(current_entry()$n_samples_per_tissue[1], big.mark = ","))
+  ),
 
-          div(
-            class = "meta-stat",
-            h5("CpGs"),
-            p(format(current_entry()$n_cpgs_total[1], big.mark = ","))
-          ),
+  div(
+    class = "meta-stat",
+    h5("Number of CpGs"),
+    p(format(current_entry()$n_cpgs_total[1], big.mark = ","))
+  ),
 
-          div(
-            class = "meta-stat",
-            h5("β"),
-            p(
-              if (!is.na(current_entry()$beta_mean_total[1]) &&
-                  current_entry()$beta_mean_total[1] != "") {
-                round(as.numeric(current_entry()$beta_mean_total[1]), 3)
-              } else {
-                "N/A"
-              }
-            )
-          ),
-
-          div(
-            class = "meta-stat",
-            h5("Expr"),
-            p(
-              if (!is.na(current_entry()$Expr_mean_total[1]) &&
-                  current_entry()$Expr_mean_total[1] != "") {
-                round(as.numeric(current_entry()$Expr_mean_total[1]), 3)
-              } else {
-                "N/A"
-              }
-            )
-          )
-        )
+  div(
+    class = "meta-stat",
+    h5("Number of Genes"),
+    p(format(current_entry()$n_genes_total[1], big.mark = ","))
+  )
+)
       ),
 
       div(style = "height:6px;"),
 
       # DATASET STATS
-      div(
-        class = "mini-meta-card",
+div(
+  class = "mini-meta-card",
 
-        h4("Dataset"),
+  h4("Dataset"),
 
-        div(
-          class = "meta-grid",
+  div(
+    class = "meta-grid",
 
-          div(
-            class = "meta-stat",
-            h5("Total n"),
-            p(current_entry()$n_samples_total[1])
-          ),
+    div(
+      class = "meta-stat",
+      h5("Total Samples"),
+      p(format(current_entry()$n_samples_total[1], big.mark = ","))
+    ),
 
-          div(
-            class = "meta-stat",
-            h5("CpGs"),
-            p(format(current_entry()$n_cpgs_total[1], big.mark = ","))
-          ),
+    div(
+      class = "meta-stat",
+      h5("Prediction Model"),
+      p("MethylProphet")
+    ),
 
-          div(
-            class = "meta-stat",
-            h5("PCA"),
-            p("Pan-dataset")
-          ),
+    div(
+      class = "meta-stat",
+      h5("Reference"),
+      p(current_entry()$dataset[1])
+    ),
 
-          div(
-            class = "meta-stat",
-            h5("Input"),
-            p(current_entry()$gene_expression[1])
-          ),
-
-          div(
-            class = "meta-stat",
-            h5("Output"),
-            p(current_entry()$dna_methylation_assay[1])
-          )
-        )
-      )
+    div(
+      class = "meta-stat",
+      h5("PCA"),
+      p("Pan-dataset")
+    )
+  )
+)
     )
   })
 
