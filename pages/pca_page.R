@@ -121,9 +121,22 @@ clean_labels <- function(df, path, entry_group = NULL) {
     df$group <- tools::toTitleCase(df$group)
 
     if (!is.null(entry_group)) {
-      entry_group <- gsub("_", " ", entry_group)
-      entry_group <- tools::toTitleCase(entry_group)
-    }
+
+  entry_group <- gsub("_", " ", entry_group)
+  entry_group <- tools::toTitleCase(entry_group)
+
+  aliases <- c(
+    "ESE" = "Esophagus Squamous Epithelium",
+    "ESM" = "Esophagus Muscularis Mucosa",
+    "GES" = "Gastroesophageal Sphincter",
+    "HLV" = "Heart Left Ventricle",
+    "HRV" = "Heart Right Ventricle"
+  )
+
+  if (entry_group %in% names(aliases)) {
+    entry_group <- aliases[[entry_group]]
+  }
+}
   }
 
   list(df = df, entry_group = entry_group)
@@ -138,7 +151,9 @@ match_entry <- function(df_group, entry_group) {
   clean_df <- gsub("[^a-z]", "", tolower(df_group))
   clean_entry <- gsub("[^a-z]", "", tolower(entry_group))
 
-  clean_df == clean_entry | startsWith(clean_df, clean_entry)
+  clean_df == clean_entry |
+    startsWith(clean_df, clean_entry) |
+    grepl(clean_entry, clean_df)
 }
 
 # =====================================================
