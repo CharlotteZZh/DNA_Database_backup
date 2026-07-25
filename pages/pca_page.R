@@ -75,61 +75,35 @@ if (!is.na(gcol) && length(gcol) > 0) {
 clean_labels <- function(df, path, entry_group = NULL) {
 
   # ---------------- ENCODE SC ----------------
-if (grepl("encode_sc", path, ignore.case = TRUE)) {
+  if (grepl("encode_sc", path, ignore.case = TRUE)) {
 
-  # Tissue labels are already stored in the "group" column
-  df$group <- gsub("_", " ", df$group)
-  df$group <- tools::toTitleCase(trimws(df$group))
+    df$group <- gsub("_", " ", df$group)
+    df$group <- tools::toTitleCase(trimws(df$group))
 
-  if (!is.null(entry_group)) {
-    entry_group <- gsub("_", " ", entry_group)
-    entry_group <- tools::toTitleCase(trimws(entry_group))
-  }
+    if (!is.null(entry_group)) {
+      entry_group <- gsub("_", " ", entry_group)
+      entry_group <- tools::toTitleCase(trimws(entry_group))
+    }
 
   # ---------------- ENCODE BULK ----------------
   } else if (grepl("encode", path, ignore.case = TRUE)) {
 
-    df$group <- gsub("^Homo sapiens ", "", df$group, ignore.case = TRUE)
-    df$group <- gsub("^Mus musculus ", "", df$group, ignore.case = TRUE)
-    df$group <- gsub(" tissue", "", df$group, ignore.case = TRUE)
-
-    df$group <- gsub(" male adult \\(.*?\\)", "", df$group)
-    df$group <- gsub(" female adult \\(.*?\\)", "", df$group)
-    df$group <- gsub(" male child \\(.*?\\)", "", df$group)
-    df$group <- gsub(" female child \\(.*?\\)", "", df$group)
-
-    df$group <- gsub(" originated from ", " ", df$group, ignore.case = TRUE)
-
+    # Keep all 57 groups separate
     df$group <- gsub("_", " ", df$group)
-
-    df$group <- gsub("^B Cell$", "Peripheral Blood", df$group, ignore.case = TRUE)
-    df$group <- gsub("^Cd14-Positive Monocyte$", "Peripheral Blood", df$group, ignore.case = TRUE)
-    df$group <- gsub("^T-Cell$", "Peripheral Blood", df$group, ignore.case = TRUE)
-    df$group <- gsub("^Natural Killer Cell$", "Peripheral Blood", df$group, ignore.case = TRUE)
-
     df$group <- trimws(df$group)
     df$group <- tools::toTitleCase(df$group)
 
     if (!is.null(entry_group)) {
+      entry_group <- gsub("_", " ", entry_group)
+      entry_group <- trimws(entry_group)
+      entry_group <- tools::toTitleCase(entry_group)
+    }
+  }
 
-  entry_group <- gsub("_", " ", entry_group)
-  entry_group <- tools::toTitleCase(entry_group)
-
-  aliases <- c(
-    "ESE" = "Esophagus Squamous Epithelium",
-    "ESM" = "Esophagus Muscularis Mucosa",
-    "GES" = "Gastroesophageal Sphincter",
-    "HLV" = "Heart Left Ventricle",
-    "HRV" = "Heart Right Ventricle"
+  list(
+    df = df,
+    entry_group = entry_group
   )
-
-  if (entry_group %in% names(aliases)) {
-    entry_group <- aliases[[entry_group]]
-  }
-}
-  }
-
-  list(df = df, entry_group = entry_group)
 }
 
 # =====================================================
@@ -160,9 +134,6 @@ build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
   )
   
   df <- normalise_pca_df(df)
-
- 
-cleaned <- clean_labels(df, path, entry_group)
 
   cleaned <- clean_labels(df, path, entry_group)
   df <- cleaned$df
