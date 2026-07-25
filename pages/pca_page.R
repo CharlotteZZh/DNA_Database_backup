@@ -38,17 +38,19 @@ normalise_pca_df <- function(obj) {
   attr(df, "pve") <- pve
 
   group_candidates <- c(
-    "generaltissue", "group", "type", "ct",
-    "celltype", "label", "database", "db"
-  )
+  "generaltissue", "group", "type", "ct",
+  "celltype", "label", "database", "db"
+)
 
-  gcol <- intersect(group_candidates, colnames(df))[1]
+gcol <- group_candidates[
+  group_candidates %in% colnames(df)
+][1]
 
-  df$group <- if (!is.na(gcol)) {
-    as.character(df[[gcol]])
-  } else {
-    "Sample"
-  }
+if (!is.na(gcol) && length(gcol) > 0) {
+  df$group <- as.character(df[[gcol]])
+} else {
+  df$group <- rep("Sample", nrow(df))
+}
 
   name_candidates <- c("name", "label", "rownames")
   ncol_name <- intersect(name_candidates, colnames(df))[1]
@@ -73,28 +75,16 @@ normalise_pca_df <- function(obj) {
 clean_labels <- function(df, path, entry_group = NULL) {
 
   # ---------------- ENCODE SC ----------------
-  if (grepl("encode_sc", path, ignore.case = TRUE)) {
+if (grepl("encode_sc", path, ignore.case = TRUE)) {
 
-    df$group <- gsub("^level3-Homo_sapiens-", "", df$group, ignore.case = TRUE)
-    df$group <- gsub("-adult_child\\.rds$", "", df$group, ignore.case = TRUE)
+  # Tissue labels are already stored in the "group" column
+  df$group <- gsub("_", " ", df$group)
+  df$group <- tools::toTitleCase(trimws(df$group))
 
-    parts <- strsplit(df$group, "-")
-
-    df$group <- sapply(parts, function(x) {
-      if (length(x) >= 2) {
-        x[1]
-      } else {
-        x[1]
-      }
-    })
-
-    df$group <- gsub("_", " ", df$group)
-    df$group <- tools::toTitleCase(df$group)
-
-    if (!is.null(entry_group)) {
-      entry_group <- gsub("_", " ", entry_group)
-      entry_group <- tools::toTitleCase(entry_group)
-    }
+  if (!is.null(entry_group)) {
+    entry_group <- gsub("_", " ", entry_group)
+    entry_group <- tools::toTitleCase(trimws(entry_group))
+  }
 
   # ---------------- ENCODE BULK ----------------
   } else if (grepl("encode", path, ignore.case = TRUE)) {
@@ -168,14 +158,11 @@ build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
     sep = "\t",
     stringsAsFactors = FALSE
   )
-
+  
   df <- normalise_pca_df(df)
 
-  # only fallback if group truly missing
-  if (grepl("encode_sc", path, ignore.case = TRUE) &&
-      !"group" %in% colnames(df)) {
-    df$group <- df$name
-  }
+ 
+cleaned <- clean_labels(df, path, entry_group)
 
   cleaned <- clean_labels(df, path, entry_group)
   df <- cleaned$df
