@@ -254,31 +254,133 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
     stringsAsFactors = FALSE
   )
 
-  if ("generaltissue" %in% colnames(df)) {
-    df$group <- df$generaltissue
-  } else if ("celltype" %in% colnames(df)) {
-    df$group <- df$celltype
-  } else if ("label" %in% colnames(df)) {
-    df$group <- df$label
-  } else if ("group" %in% colnames(df)) {
-    df$group <- df$group
-  } else if ("name" %in% colnames(df)) {
-    df$group <- df$name
+  # =====================================================
+  # ENCODE SINGLE-CELL
+  # =====================================================
+
+  if (grepl("encode_sc", path, ignore.case = TRUE)) {
+
+    # Find the column containing the original Level3 labels
+    label_candidates <- c("name", "label", "celltype", "group")
+
+    label_col <- label_candidates[
+      label_candidates %in% colnames(df)
+    ][1]
+
+    if (!is.na(label_col) && length(label_col) > 0) {
+
+      # Preserve full original label for hover
+      df$name <- as.character(df[[label_col]])
+
+      # Convert:
+      # level3-Homo_sapiens-adrenal_gland-adrenal_cortical_cell-adult_child.rds
+      #
+      # into:
+      # Adrenal Gland
+
+      tissue <- df$name
+
+      tissue <- gsub(
+        "^level3-Homo_sapiens-",
+        "",
+        tissue,
+        ignore.case = TRUE
+      )
+
+      # Explicitly match the 13 database tissues
+      encode_sc_tissues <- c(
+        "adrenal_gland",
+        "bile_duct",
+        "colon",
+        "fallopian_tube",
+        "heart",
+        "liver",
+        "lung",
+        "muscle",
+        "ovary",
+        "pancreas",
+        "placenta",
+        "ureter",
+        "uterus"
+      )
+
+      tissue <- vapply(
+        tissue,
+        function(x) {
+
+          matches <- encode_sc_tissues[
+            startsWith(
+              tolower(x),
+              paste0(tolower(encode_sc_tissues), "-")
+            )
+          ]
+
+          if (length(matches) > 0) {
+            matches[1]
+          } else {
+            "other"
+          }
+        },
+        character(1)
+      )
+
+      df$group <- gsub("_", " ", tissue)
+      df$group <- tools::toTitleCase(df$group)
+
+    } else {
+
+      df$name <- rownames(df)
+      df$group <- "Other"
+    }
+
+    # Make selected entry use same naming convention
+    if (!is.null(entry_group)) {
+      entry_group <- gsub("_", " ", entry_group)
+      entry_group <- tools::toTitleCase(trimws(entry_group))
+    }
+
+  # =====================================================
+  # ALL OTHER DATASETS
+  # =====================================================
+
   } else {
-    df$group <- "Sample"
+
+    if ("generaltissue" %in% colnames(df)) {
+      df$group <- df$generaltissue
+    } else if ("celltype" %in% colnames(df)) {
+      df$group <- df$celltype
+    } else if ("label" %in% colnames(df)) {
+      df$group <- df$label
+    } else if ("group" %in% colnames(df)) {
+      df$group <- df$group
+    } else if ("name" %in% colnames(df)) {
+      df$group <- df$name
+    } else {
+      df$group <- "Sample"
+    }
+
+    if (!"name" %in% colnames(df)) {
+      df$name <- rownames(df)
+    }
+
+    cleaned <- clean_labels(df, path, entry_group)
+
+    df <- cleaned$df
+    entry_group <- cleaned$entry_group
   }
 
-  if (!"name" %in% colnames(df)) {
-    df$name <- rownames(df)
-  }
-
-  cleaned <- clean_labels(df, path, entry_group)
-  df <- cleaned$df
-  entry_group <- cleaned$entry_group
+  # =====================================================
+  # HOVER TEXT
+  # =====================================================
 
   df$hover_text <- paste0(
-    "<b>", df$name, "</b><br>Group: ", df$group
+    "<b>", df$name, "</b>",
+    "<br>Group: ", df$group
   )
+
+  # =====================================================
+  # BASE UMAP
+  # =====================================================
 
   p <- plot_ly(
     data = df,
@@ -295,6 +397,10 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
     )
   )
 
+  # =====================================================
+  # HIGHLIGHT SELECTED ENTRY
+  # =====================================================
+
   if (!is.null(entry_group)) {
 
     hl <- df[
@@ -304,6 +410,7 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
     ]
 
     if (nrow(hl) > 0) {
+
       p <- p %>%
         add_trace(
           data = hl,
@@ -311,6 +418,8 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
           y = ~UMAP2,
           type = "scatter",
           mode = "markers",
+          text = ~hover_text,
+          hoverinfo = "text",
           marker = list(
             symbol = "diamond",
             size = 11,
@@ -326,10 +435,16 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
     }
   }
 
+  # =====================================================
+  # LAYOUT
+  # =====================================================
+
   p %>%
     layout(
       title = title,
-      legend = list(title = list(text = "Group")),
+      legend = list(
+        title = list(text = "Group")
+      ),
       xaxis = list(title = "UMAP1"),
       yaxis = list(title = "UMAP2")
     )
