@@ -252,7 +252,7 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
       tissue <- df$name
 
       tissue <- gsub(
-        "^level3-Homo_sapiens-",
+        "^level3-(Homo_sapiens|Mus_musculus)-",
         "",
         tissue,
         ignore.case = TRUE
@@ -262,6 +262,7 @@ build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
       encode_sc_tissues <- c(
         "adrenal_gland",
         "bile_duct",
+        "brain",
         "colon",
         "fallopian_tube",
         "heart",
