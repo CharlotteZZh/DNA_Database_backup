@@ -49,7 +49,13 @@ entry_ui <- function() {
           div(
             class = "feature-card",
 
-            h2("Downloads"),
+            h2(
+              style = "
+                font-size:24px;
+                font-weight:600;
+              ",
+              "Downloads (cancer/cell/tissue-specific)"
+            ),
 
             br(),
 
@@ -62,7 +68,7 @@ entry_ui <- function() {
             uiOutput("rna_download"),
             br(), br(),
 
-            uiOutput("plot_download")
+            uiOutput("track_download")
           )
         ),
 
@@ -396,42 +402,42 @@ div(
   # =========================================
 
   output$prediction_download <- renderUI({
-    tags$a(
-      href = current_entry()$predicted_path[1],
-      target = "_blank",
-      class = "btn btn-primary",
-      style = "width:100%;",
-      "Download Predicted DNAm"
-    )
-  })
+  tags$a(
+    href = current_entry()$predicted_download_tissue[1],
+    target = "_blank",
+    class = "btn btn-primary",
+    style = "width:100%;",
+    "Download Predicted DNAm"
+  )
+})
 
-  output$source_download <- renderUI({
-    tags$a(
-      href = current_entry()$gold_path[1],
-      target = "_blank",
-      class = "btn btn-secondary",
-      style = "width:100%;",
-      "Download Gold-standard DNAm"
-    )
-  })
+output$source_download <- renderUI({
+  tags$a(
+    href = current_entry()$goldstandard_download_tissue[1],
+    target = "_blank",
+    class = "btn btn-secondary",
+    style = "width:100%;",
+    "Download Gold-standard DNAm"
+  )
+})
 
-  output$rna_download <- renderUI({
-    tags$a(
-      href = current_entry()$input_path[1],
-      target = "_blank",
-      class = "btn btn-secondary",
-      style = "width:100%;",
-      "Download Input RNA"
-    )
-  })
-
-  output$plot_download <- renderUI({
-    tags$a(
-      href = current_entry()$plot_path[1],
-      target = "_blank",
-      class = "btn btn-secondary",
-      style = "width:100%;",
-      "Download Static Plot"
-    )
-  })
+output$rna_download <- renderUI({
+  tags$a(
+    href = current_entry()$input_download_tissue[1],
+    target = "_blank",
+    class = "btn btn-secondary",
+    style = "width:100%;",
+    "Download Input RNA"
+  )
+})
+  
+output$track_download <- renderUI({
+  tags$a(
+    href = current_entry()$track_download_tissue[1],
+    target = "_blank",
+    class = "btn btn-secondary",
+    style = "width:100%;",
+    "Download DNAm Tracks"
+  )
+})
 }
