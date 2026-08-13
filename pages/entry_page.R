@@ -258,12 +258,49 @@ div(
   # =========================================
 
   output$dataset_notes <- renderText({
+
+  dataset <- tolower(current_entry()$dataset[1])
+
+  if (grepl("encode", dataset) && !grepl("single", dataset)) {
+
+    paste(
+      "This entry represents a tissue-specific subset of the ENCODE bulk dataset.",
+      "Interactive PCA and UMAP embeddings are computed at the full dataset level.",
+      "The static PCA plot is from a separate cross-validation analysis combining measured and predicted samples, so its sample positions may differ from the interactive PCA."
+    )
+
+  } else if (grepl("gtex", dataset)) {
+
+    paste(
+      "This entry represents a tissue-specific subset of the GTEx dataset.",
+      "Interactive PCA and UMAP embeddings are computed from the full GTEx predicted DNAm dataset.",
+      "The static PCA combines ENCODE and GTEx samples, so sample positions may differ from the interactive PCA."
+    )
+
+  } else if (grepl("tcga", dataset)) {
+
+    paste(
+      "This entry represents a cancer-specific subset of the TCGA dataset.",
+      "Interactive PCA and UMAP embeddings are computed at the full TCGA dataset level for the corresponding methylation technology.",
+      "Static plots may differ when generated using different sample sets or preprocessing."
+    )
+
+  } else if (grepl("encode.*sc|single.*cell", dataset)) {
+
+    paste(
+      "This entry represents a pseudobulk cell population from the ENCODE4 single-cell dataset.",
+      "Interactive PCA and UMAP embeddings are computed at the full ENCODE4 single-cell dataset level using predicted DNAm profiles."
+    )
+
+  } else {
+
     paste(
       "This entry represents a tissue- or cohort-specific subset of the",
       current_entry()$dataset[1],
       "dataset. Interactive PCA and UMAP embeddings are computed at the full dataset level to preserve global biological structure and enable cross-tissue or cross-cohort comparisons."
     )
-  })
+  }
+})
 
   # =========================================
   # PCA TABS
@@ -317,29 +354,55 @@ div(
   })
 
   # =========================================
-  # UMAP TABS
-  # =========================================
+# UMAP TABS
+# =========================================
 
-  output$umap_tabs <- renderUI({
+output$umap_tabs <- renderUI({
 
-    tabsetPanel(
+  tabsetPanel(
 
-      tabPanel(
-        "Input RNA",
-        plotlyOutput("entry_umap_input", height = "500px")
-      ),
+    tabPanel(
+      "Input RNA",
+      plotlyOutput("entry_umap_input", height = "500px")
+    ),
 
-      tabPanel(
-        "Predicted DNAm",
-        plotlyOutput("entry_umap_pred", height = "500px")
-      ),
+    tabPanel(
+      "Predicted DNAm",
+      plotlyOutput("entry_umap_pred", height = "500px")
+    ),
 
-      tabPanel(
-        "Gold-standard DNAm",
-        plotlyOutput("entry_umap_gold", height = "500px")
-      )
+    tabPanel(
+      "Gold-standard DNAm",
+      plotlyOutput("entry_umap_gold", height = "500px")
+    ),
+
+    tabPanel(
+      "Static Plot",
+
+      br(),
+
+      if (
+        !is.na(current_entry()$umap_path[1]) &&
+        current_entry()$umap_path[1] != ""
+      ) {
+
+        tags$iframe(
+          src = current_entry()$umap_path[1],
+          width = "100%",
+          height = "900px",
+          style = "border:none;"
+        )
+
+      } else {
+
+        div(
+          class = "coming-soon-box",
+          "Static plot unavailable."
+        )
+      }
     )
-  })
+  )
+})
 
   # =========================================
   # PCA PLOTS
