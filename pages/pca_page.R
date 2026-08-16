@@ -68,13 +68,17 @@ if (!is.na(gcol) && length(gcol) > 0) {
   df
 }
 
+
 # =====================================================
 # CLEAN LABELS
 # =====================================================
 
 clean_labels <- function(df, path, entry_group = NULL) {
 
-  # ---------------- ENCODE SC ----------------
+  # ===================================================
+  # ENCODE SINGLE-CELL
+  # ===================================================
+
   if (grepl("encode_sc", path, ignore.case = TRUE)) {
 
     df$group <- gsub("_", " ", df$group)
@@ -85,109 +89,312 @@ clean_labels <- function(df, path, entry_group = NULL) {
       entry_group <- tools::toTitleCase(trimws(entry_group))
     }
 
-  # ---------------- ENCODE BULK ----------------
+  # ===================================================
+  # ENCODE BULK
+  # ===================================================
+
   } else if (grepl("encode_bulk", path, ignore.case = TRUE)) {
 
-    x <- tolower(df$group)
+    x <- tolower(trimws(df$group))
 
-    # Anatomical tissues
-    df$group[grepl("adipose", x)] <- "Adipose Tissue"
-    df$group[grepl("adrenal gland", x)] <- "Adrenal Gland"
-    df$group[grepl("aorta", x)] <- "Aorta"
+    # -----------------------------------------------
+    # Exact 19 database groups
+    # -----------------------------------------------
 
-    df$group[
-      grepl("esophagus|gastroesophageal sphincter", x)
-    ] <- "Esophagus"
+    new_group <- rep(NA_character_, length(x))
 
-    df$group[
-      grepl("large intestine|sigmoid colon|transverse colon", x)
-    ] <- "Colon"
+    # 1. Adipose Tissue
+    new_group[
+      grepl("adipose", x)
+    ] <- "Adipose Tissue"
 
-    df$group[
-      grepl("heart left ventricle|heart right ventricle|right cardiac atrium", x)
-    ] <- "Heart"
+    # 2. Adrenal Gland
+    new_group[
+      grepl("adrenal", x)
+    ] <- "Adrenal Gland"
 
-    df$group[
-      grepl("right lobe of liver|^.*liver", x)
-    ] <- "Liver"
+    # 3. Aorta
+    new_group[
+      grepl("^aorta$", x)
+    ] <- "Aorta"
 
-    df$group[
-      grepl("lower leg skin|suprapubic skin", x)
-    ] <- "Skin"
-
-    df$group[
-      grepl("upper lobe of left lung|^.*lung", x)
-    ] <- "Lung"
-
-    df$group[
-      grepl("muscle of leg|psoas muscle|skeletal muscle myoblast|smooth muscle", x)
-    ] <- "Muscle"
-
-    df$group[grepl("motor neuron", x)] <- "Motor Neuron"
-    df$group[grepl("ovary", x)] <- "Ovary"
-    df$group[grepl("pancreas", x)] <- "Pancreas"
-    df$group[grepl("small intestine", x)] <- "Small Intestine"
-    df$group[grepl("spleen", x)] <- "Spleen"
-    df$group[grepl("stomach", x)] <- "Stomach"
-    df$group[grepl("testis", x)] <- "Testis"
-    df$group[grepl("thyroid gland", x)] <- "Thyroid Gland"
-    df$group[grepl("tibial nerve", x)] <- "Tibial Nerve"
-    df$group[grepl("thymus", x)] <- "Thymus"
-    df$group[grepl("prostate gland", x)] <- "Prostate Gland"
-    df$group[grepl("urinary bladder", x)] <- "Urinary Bladder"
-
-    # Blood / immune cells
-    df$group[
+    # 4. Colon
+    new_group[
       grepl(
-        "b cell|cd14-positive monocyte|natural killer cell|t-cell|common myeloid progenitor",
+        "large_intestine|sigmoid_colon|transverse_colon",
         x
       )
-    ] <- "Peripheral Blood"
+    ] <- "Colon"
 
-    # Cell lines / stem-cell-derived populations
-    df$group[grepl("gm12878", x)] <- "GM12878"
-    df$group[grepl("gm23248", x)] <- "GM23248"
-    df$group[grepl("^homo sapiens h1$|^h1$", x)] <- "H1"
-    df$group[grepl("hues64", x)] <- "HUES64"
+    # 5. Esophagus
+    new_group[
+      grepl(
+        "^esophagus$|esophagus_muscularis|esophagus_squamous",
+        x
+      )
+    ] <- "Esophagus"
 
-    df$group[
-      grepl("hepatocyte originated from h9", x)
-    ] <- "H9 Hepatocyte"
+    # 6. Heart
+    new_group[
+      grepl(
+        "heart_left_ventricle|heart_right_ventricle|right_cardiac_atrium",
+        x
+      )
+    ] <- "Heart"
 
-    df$group[
-      grepl("mesenchymal stem cell originated from h1", x)
-    ] <- "H1 Mesenchymal Stem Cell"
+    # 7. Liver
+    new_group[
+      grepl(
+        "^liver$|right_lobe_of_liver",
+        x
+      )
+    ] <- "Liver"
 
-    df$group[
-      grepl("ectodermal cell originated from hues64", x)
-    ] <- "HUES64 Ectodermal Cell"
+    # 8. Lung
+    new_group[
+      grepl(
+        "^lung$|upper_lobe_of_left_lung",
+        x
+      )
+    ] <- "Lung"
 
-    df$group[
-      grepl("endodermal cell originated from hues64", x)
-    ] <- "HUES64 Endodermal Cell"
+    # 9. Motor Neuron
+    new_group[
+      grepl("motor_neuron", x)
+    ] <- "Motor Neuron"
 
-    df$group[
-      grepl("mesodermal cell originated from hues64", x)
-    ] <- "HUES64 Mesodermal Cell"
+    # 10. Muscle
+    new_group[
+      grepl(
+        "muscle_of_leg|psoas_muscle|skeletal_muscle_myoblast|smooth_muscle",
+        x
+      )
+    ] <- "Muscle"
 
-    # Clean selected entry label the same way
+    # 11. Ovary
+    new_group[
+      grepl("^ovary$", x)
+    ] <- "Ovary"
+
+    # 12. Pancreas
+    new_group[
+      grepl("^pancreas$", x)
+    ] <- "Pancreas"
+
+    # 13. Skin
+    new_group[
+      grepl(
+        "lower_leg_skin|suprapubic_skin",
+        x
+      )
+    ] <- "Skin"
+
+    # 14. Small Intestine
+    new_group[
+      grepl("^small_intestine$", x)
+    ] <- "Small Intestine"
+
+    # 15. Spleen
+    new_group[
+      grepl("^spleen$", x)
+    ] <- "Spleen"
+
+    # 16. Stomach
+    new_group[
+      grepl("^stomach$", x)
+    ] <- "Stomach"
+
+    # 17. Testis
+    new_group[
+      grepl("^testis$", x)
+    ] <- "Testis"
+
+    # 18. Thyroid Gland
+    new_group[
+      grepl("^thyroid_gland$", x)
+    ] <- "Thyroid Gland"
+
+    # 19. Tibial Nerve
+    new_group[
+      grepl("^tibial_nerve$", x)
+    ] <- "Tibial Nerve"
+
+    # -----------------------------------------------
+    # Keep only samples belonging to the 19 entries
+    # -----------------------------------------------
+
+    keep <- !is.na(new_group)
+
+    df <- df[keep, , drop = FALSE]
+    new_group <- new_group[keep]
+
+    df$group <- new_group
+
+    # -----------------------------------------------
+    # Clean selected entry
+    # -----------------------------------------------
+
     if (!is.null(entry_group)) {
-      entry_group <- gsub("_", " ", entry_group)
-      entry_group <- trimws(entry_group)
-      entry_group <- tools::toTitleCase(entry_group)
 
-      entry_x <- tolower(entry_group)
+      entry_x <- tolower(
+        gsub("_", " ", trimws(entry_group))
+      )
 
-      if (grepl("motor neuron", entry_x)) {
-        entry_group <- "Motor Neuron"
-      } else if (grepl("transverse colon|sigmoid colon|large intestine", entry_x)) {
+      if (grepl("adipose", entry_x)) {
+
+        entry_group <- "Adipose Tissue"
+
+      } else if (grepl("adrenal", entry_x)) {
+
+        entry_group <- "Adrenal Gland"
+
+      } else if (grepl("aorta", entry_x)) {
+
+        entry_group <- "Aorta"
+
+      } else if (
+        grepl(
+          "colon|large intestine|sigmoid|transverse",
+          entry_x
+        )
+      ) {
+
         entry_group <- "Colon"
-      } else if (grepl("esophagus|gastroesophageal", entry_x)) {
+
+      } else if (
+        grepl("esophagus", entry_x)
+      ) {
+
         entry_group <- "Esophagus"
-      } else if (grepl("b cell|cd14|natural killer|t-cell|myeloid progenitor", entry_x)) {
-        entry_group <- "Peripheral Blood"
+
+      } else if (
+        grepl("heart|cardiac",
+              entry_x)
+      ) {
+
+        entry_group <- "Heart"
+
+      } else if (
+        grepl("liver",
+              entry_x)
+      ) {
+
+        entry_group <- "Liver"
+
+      } else if (
+        grepl("lung",
+              entry_x)
+      ) {
+
+        entry_group <- "Lung"
+
+      } else if (
+        grepl("motor neuron",
+              entry_x)
+      ) {
+
+        entry_group <- "Motor Neuron"
+
+      } else if (
+        grepl("muscle",
+              entry_x)
+      ) {
+
+        entry_group <- "Muscle"
+
+      } else if (
+        grepl("ovary",
+              entry_x)
+      ) {
+
+        entry_group <- "Ovary"
+
+      } else if (
+        grepl("pancreas",
+              entry_x)
+      ) {
+
+        entry_group <- "Pancreas"
+
+      } else if (
+        grepl("skin",
+              entry_x)
+      ) {
+
+        entry_group <- "Skin"
+
+      } else if (
+        grepl("small intestine",
+              entry_x)
+      ) {
+
+        entry_group <- "Small Intestine"
+
+      } else if (
+        grepl("spleen",
+              entry_x)
+      ) {
+
+        entry_group <- "Spleen"
+
+      } else if (
+        grepl("stomach",
+              entry_x)
+      ) {
+
+        entry_group <- "Stomach"
+
+      } else if (
+        grepl("testis",
+              entry_x)
+      ) {
+
+        entry_group <- "Testis"
+
+      } else if (
+        grepl("thyroid",
+              entry_x)
+      ) {
+
+        entry_group <- "Thyroid Gland"
+
+      } else if (
+        grepl("tibial nerve",
+              entry_x)
+      ) {
+
+        entry_group <- "Tibial Nerve"
       }
     }
+
+  # ===================================================
+  # OTHER DATASETS
+  # ===================================================
+
+  } else {
+
+    df$group <- gsub("_", " ", df$group)
+    df$group <- tools::toTitleCase(
+      trimws(df$group)
+    )
+
+    if (!is.null(entry_group)) {
+      entry_group <- gsub("_", " ", entry_group)
+      entry_group <- tools::toTitleCase(
+        trimws(entry_group)
+      )
+    }
+  }
+
+  # ===================================================
+  # RETURN
+  # ===================================================
+
+  list(
+    df = df,
+    entry_group = entry_group
+  )
+}
 
 # =====================================================
 # MATCH HIGHLIGHT
