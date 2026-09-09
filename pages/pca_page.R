@@ -2,63 +2,271 @@ library(shiny)
 library(plotly)
 
 # =====================================================
+# READ TSV / GZ FILE
+# =====================================================
+
+read_tsv_auto <- function(path) {
+
+  # Some files have a .gz extension but are actually plain text.
+  # Detect whether the file is genuinely gzip-compressed.
+
+  is_gzip <- FALSE
+
+  if (file.exists(path)) {
+
+    con <- file(path, "rb")
+
+    magic <- tryCatch(
+      readBin(con, what = "raw", n = 2),
+      error = function(e) raw(0)
+    )
+
+    close(con)
+
+    if (length(magic) == 2 &&
+        identical(magic, as.raw(c(0x1f, 0x8b)))) {
+      is_gzip <- TRUE
+    }
+  }
+
+  if (is_gzip) {
+
+    read.table(
+      gzfile(path),
+      header = TRUE,
+      sep = "\t",
+      stringsAsFactors = FALSE,
+      check.names = FALSE
+    )
+
+  } else {
+
+    read.table(
+      path,
+      header = TRUE,
+      sep = "\t",
+      stringsAsFactors = FALSE,
+      check.names = FALSE
+    )
+  }
+}
+
+
+# =====================================================
+# PARSE ENCODE SINGLE-CELL SAMPLE NAMES
+# =====================================================
+
+parse_encode_sc_name <- function(x) {
+
+  x <- basename(as.character(x))
+
+  # Remove .rds
+  x <- sub(
+    "\\.rds$",
+    "",
+    x,
+    ignore.case = TRUE
+  )
+
+  # Remove species prefix
+  x <- sub(
+    "^level3-Homo_sapiens-",
+    "",
+    x,
+    ignore.case = TRUE
+  )
+
+  x <- sub(
+    "^level3-Mus_musculus-",
+    "",
+    x,
+    ignore.case = TRUE
+  )
+
+  # Tissue = first component after species
+  tissue <- sub(
+    "-.*$",
+    "",
+    x
+  )
+
+  # Everything after tissue
+  remainder <- sub(
+    "^[^-]+-",
+    "",
+    x
+  )
+
+  # Remove age suffix
+  #
+  # Current ENCODE names use suffixes such as:
+  # adult_child
+  # embryo_postnatal
+  #
+  celltype <- sub(
+    "-(adult_child|embryo_postnatal)$",
+    "",
+    remainder,
+    ignore.case = TRUE
+  )
+
+  # Convert underscores to spaces
+  tissue <- gsub(
+    "_",
+    " ",
+    tissue
+  )
+
+  celltype <- gsub(
+    "_",
+    " ",
+    celltype
+  )
+
+  # Make labels readable
+  tissue <- tools::toTitleCase(tissue)
+  celltype <- tools::toTitleCase(celltype)
+
+  data.frame(
+    tissue = tissue,
+    celltype = celltype,
+    stringsAsFactors = FALSE
+  )
+}
+
+
+# =====================================================
 # NORMALIZE PCA DATA
 # =====================================================
 
 normalise_pca_df <- function(obj) {
 
   if (inherits(obj, "prcomp")) {
-    df <- as.data.frame(obj$x[, 1:2, drop = FALSE])
-    colnames(df)[1:2] <- c("PC1", "PC2")
+
+    df <- as.data.frame(
+      obj$x[, 1:2, drop = FALSE]
+    )
+
+    colnames(df)[1:2] <- c(
+      "PC1",
+      "PC2"
+    )
 
     df$group <- "Sample"
     df$name <- rownames(df)
     df$celltype <- NA_character_
 
-    pve <- (obj$sdev^2) / sum(obj$sdev^2)
+    pve <- (
+      obj$sdev^2
+    ) / sum(obj$sdev^2)
+
     attr(df, "pve") <- pve[1:2] * 100
+
     return(df)
   }
 
   df <- as.data.frame(obj)
 
-  pc_cols <- grep("^PC", colnames(df))
+  # ---------------------------------------------------
+  # PCA columns
+  # ---------------------------------------------------
+
+  pc_cols <- grep(
+    "^PC",
+    colnames(df)
+  )
+
   orig_pc <- colnames(df)[pc_cols][1:2]
-  colnames(df)[pc_cols[1:2]] <- c("PC1", "PC2")
+
+  colnames(df)[pc_cols[1:2]] <- c(
+    "PC1",
+    "PC2"
+  )
 
   pve <- suppressWarnings(
-    as.numeric(sub("^PC[0-9]+_?", "", orig_pc))
+    as.numeric(
+      sub(
+        "^PC[0-9]+_?",
+        "",
+        orig_pc
+      )
+    )
   )
 
   if (any(is.na(pve))) {
-    pve_attr <- attr(obj, "pve")
-    pve <- if (!is.null(pve_attr)) pve_attr[1:2] * 100 else NULL
+
+    pve_attr <- attr(
+      obj,
+      "pve"
+    )
+
+    pve <- if (!is.null(pve_attr)) {
+      pve_attr[1:2] * 100
+    } else {
+      NULL
+    }
   }
 
   attr(df, "pve") <- pve
 
-  group_candidates <- c(
-  "generaltissue", "group", "type", "ct",
-  "celltype", "label", "database", "db"
-)
+  # ---------------------------------------------------
+  # Name
+  # ---------------------------------------------------
 
-gcol <- group_candidates[
-  group_candidates %in% colnames(df)
-][1]
+  name_candidates <- c(
+    "name",
+    "rownames"
+  )
 
-if (!is.na(gcol) && length(gcol) > 0) {
-  df$group <- as.character(df[[gcol]])
-} else {
-  df$group <- rep("Sample", nrow(df))
-}
+  ncol_name <- intersect(
+    name_candidates,
+    colnames(df)
+  )[1]
 
-  name_candidates <- c("name", "label", "rownames")
-  ncol_name <- intersect(name_candidates, colnames(df))[1]
+  df$name <- if (
+    !is.na(ncol_name)
+  ) {
 
-  df$name <- if (!is.na(ncol_name)) {
-    as.character(df[[ncol_name]])
+    as.character(
+      df[[ncol_name]]
+    )
+
   } else {
+
     rownames(df)
+  }
+
+  # ---------------------------------------------------
+  # Existing group
+  # ---------------------------------------------------
+
+  group_candidates <- c(
+    "generaltissue",
+    "group",
+    "type",
+    "ct",
+    "celltype",
+    "label",
+    "database",
+    "db"
+  )
+
+  gcol <- intersect(
+    group_candidates,
+    colnames(df)
+  )[1]
+
+  df$group <- if (
+    !is.na(gcol)
+  ) {
+
+    as.character(
+      df[[gcol]]
+    )
+
+  } else {
+
+    "Sample"
   }
 
   if (!"celltype" %in% colnames(df)) {
@@ -70,325 +278,173 @@ if (!is.na(gcol) && length(gcol) > 0) {
 
 
 # =====================================================
-# CLEAN LABELS
+# CLEAN NON-SINGLE-CELL LABELS
 # =====================================================
 
-clean_labels <- function(df, path, entry_group = NULL) {
+clean_labels <- function(
+    df,
+    path,
+    entry_group = NULL
+) {
 
-  # ===================================================
-  # ENCODE SINGLE-CELL
-  # ===================================================
+  # ---------------------------------------------------
+  # ENCODE SINGLE CELL
+  #
+  # IMPORTANT:
+  # group = CELL TYPE
+  # tissue = TISSUE
+  # ---------------------------------------------------
 
-  if (grepl("encode_sc", path, ignore.case = TRUE)) {
+  if (
+    grepl(
+      "encode_sc",
+      path,
+      ignore.case = TRUE
+    )
+  ) {
 
-    df$group <- gsub("_", " ", df$group)
-    df$group <- tools::toTitleCase(trimws(df$group))
+    parsed <- parse_encode_sc_name(
+      df$name
+    )
+
+    df$tissue <- parsed$tissue
+    df$celltype <- parsed$celltype
+
+    # PCA / UMAP legend should be CELL TYPE
+    df$group <- df$celltype
 
     if (!is.null(entry_group)) {
-      entry_group <- gsub("_", " ", entry_group)
-      entry_group <- tools::toTitleCase(trimws(entry_group))
+
+      entry_group <- gsub(
+        "_",
+        " ",
+        entry_group
+      )
+
+      entry_group <- tools::toTitleCase(
+        entry_group
+      )
     }
 
-  # ===================================================
+  # ---------------------------------------------------
   # ENCODE BULK
-  # ===================================================
-
-  } else if (grepl("encode_bulk", path, ignore.case = TRUE)) {
-
-    x <- tolower(trimws(df$group))
-
-    # -----------------------------------------------
-    # Exact 19 database groups
-    # -----------------------------------------------
-
-    new_group <- rep(NA_character_, length(x))
-
-    # 1. Adipose Tissue
-    new_group[
-      grepl("adipose", x)
-    ] <- "Adipose Tissue"
-
-    # 2. Adrenal Gland
-    new_group[
-      grepl("adrenal", x)
-    ] <- "Adrenal Gland"
-
-    # 3. Aorta
-    new_group[
-      grepl("^aorta$", x)
-    ] <- "Aorta"
-
-    # 4. Colon
-    new_group[
-      grepl(
-        "large_intestine|sigmoid_colon|transverse_colon",
-        x
-      )
-    ] <- "Colon"
-
-    # 5. Esophagus
-    new_group[
-      grepl(
-        "^esophagus$|esophagus_muscularis|esophagus_squamous",
-        x
-      )
-    ] <- "Esophagus"
-
-    # 6. Heart
-    new_group[
-      grepl(
-        "heart_left_ventricle|heart_right_ventricle|right_cardiac_atrium",
-        x
-      )
-    ] <- "Heart"
-
-    # 7. Liver
-    new_group[
-      grepl(
-        "^liver$|right_lobe_of_liver",
-        x
-      )
-    ] <- "Liver"
-
-    # 8. Lung
-    new_group[
-      grepl(
-        "^lung$|upper_lobe_of_left_lung",
-        x
-      )
-    ] <- "Lung"
-
-    # 9. Motor Neuron
-    new_group[
-      grepl("motor_neuron", x)
-    ] <- "Motor Neuron"
-
-    # 10. Muscle
-    new_group[
-      grepl(
-        "muscle_of_leg|psoas_muscle|skeletal_muscle_myoblast|smooth_muscle",
-        x
-      )
-    ] <- "Muscle"
-
-    # 11. Ovary
-    new_group[
-      grepl("^ovary$", x)
-    ] <- "Ovary"
-
-    # 12. Pancreas
-    new_group[
-      grepl("^pancreas$", x)
-    ] <- "Pancreas"
-
-    # 13. Skin
-    new_group[
-      grepl(
-        "lower_leg_skin|suprapubic_skin",
-        x
-      )
-    ] <- "Skin"
-
-    # 14. Small Intestine
-    new_group[
-      grepl("^small_intestine$", x)
-    ] <- "Small Intestine"
+  # ---------------------------------------------------
+
+  } else if (
+    grepl(
+      "encode",
+      path,
+      ignore.case = TRUE
+    )
+  ) {
+
+    df$group <- gsub(
+      "^Homo sapiens ",
+      "",
+      df$group,
+      ignore.case = TRUE
+    )
+
+    df$group <- gsub(
+      "^Mus musculus ",
+      "",
+      df$group,
+      ignore.case = TRUE
+    )
+
+    df$group <- gsub(
+      " tissue",
+      "",
+      df$group,
+      ignore.case = TRUE
+    )
+
+    df$group <- gsub(
+      " male adult \\(.*?\\)",
+      "",
+      df$group
+    )
+
+    df$group <- gsub(
+      " female adult \\(.*?\\)",
+      "",
+      df$group
+    )
+
+    df$group <- gsub(
+      " male child \\(.*?\\)",
+      "",
+      df$group
+    )
+
+    df$group <- gsub(
+      " female child \\(.*?\\)",
+      "",
+      df$group
+    )
+
+    df$group <- gsub(
+      " originated from ",
+      " ",
+      df$group,
+      ignore.case = TRUE
+    )
+
+    df$group <- gsub(
+      "_",
+      " ",
+      df$group
+    )
+
+    df$group <- gsub(
+      "^B Cell$",
+      "Peripheral Blood",
+      df$group,
+      ignore.case = TRUE
+    )
+
+    df$group <- gsub(
+      "^Cd14-Positive Monocyte$",
+      "Peripheral Blood",
+      df$group,
+      ignore.case = TRUE
+    )
+
+    df$group <- gsub(
+      "^T-Cell$",
+      "Peripheral Blood",
+      df$group,
+      ignore.case = TRUE
+    )
+
+    df$group <- gsub(
+      "^Natural Killer Cell$",
+      "Peripheral Blood",
+      df$group,
+      ignore.case = TRUE
+    )
+
+    df$group <- trimws(
+      df$group
+    )
 
-    # 15. Spleen
-    new_group[
-      grepl("^spleen$", x)
-    ] <- "Spleen"
-
-    # 16. Stomach
-    new_group[
-      grepl("^stomach$", x)
-    ] <- "Stomach"
-
-    # 17. Testis
-    new_group[
-      grepl("^testis$", x)
-    ] <- "Testis"
-
-    # 18. Thyroid Gland
-    new_group[
-      grepl("^thyroid_gland$", x)
-    ] <- "Thyroid Gland"
-
-    # 19. Tibial Nerve
-    new_group[
-      grepl("^tibial_nerve$", x)
-    ] <- "Tibial Nerve"
-
-    # -----------------------------------------------
-    # Keep only samples belonging to the 19 entries
-    # -----------------------------------------------
-
-    keep <- !is.na(new_group)
-
-    df <- df[keep, , drop = FALSE]
-    new_group <- new_group[keep]
-
-    df$group <- new_group
-
-    # -----------------------------------------------
-    # Clean selected entry
-    # -----------------------------------------------
-
-    if (!is.null(entry_group)) {
-
-      entry_x <- tolower(
-        gsub("_", " ", trimws(entry_group))
-      )
-
-      if (grepl("adipose", entry_x)) {
-
-        entry_group <- "Adipose Tissue"
-
-      } else if (grepl("adrenal", entry_x)) {
-
-        entry_group <- "Adrenal Gland"
-
-      } else if (grepl("aorta", entry_x)) {
-
-        entry_group <- "Aorta"
-
-      } else if (
-        grepl(
-          "colon|large intestine|sigmoid|transverse",
-          entry_x
-        )
-      ) {
-
-        entry_group <- "Colon"
-
-      } else if (
-        grepl("esophagus", entry_x)
-      ) {
-
-        entry_group <- "Esophagus"
-
-      } else if (
-        grepl("heart|cardiac",
-              entry_x)
-      ) {
-
-        entry_group <- "Heart"
-
-      } else if (
-        grepl("liver",
-              entry_x)
-      ) {
-
-        entry_group <- "Liver"
-
-      } else if (
-        grepl("lung",
-              entry_x)
-      ) {
-
-        entry_group <- "Lung"
-
-      } else if (
-        grepl("motor neuron",
-              entry_x)
-      ) {
-
-        entry_group <- "Motor Neuron"
-
-      } else if (
-        grepl("muscle",
-              entry_x)
-      ) {
-
-        entry_group <- "Muscle"
-
-      } else if (
-        grepl("ovary",
-              entry_x)
-      ) {
-
-        entry_group <- "Ovary"
-
-      } else if (
-        grepl("pancreas",
-              entry_x)
-      ) {
-
-        entry_group <- "Pancreas"
-
-      } else if (
-        grepl("skin",
-              entry_x)
-      ) {
-
-        entry_group <- "Skin"
-
-      } else if (
-        grepl("small intestine",
-              entry_x)
-      ) {
-
-        entry_group <- "Small Intestine"
-
-      } else if (
-        grepl("spleen",
-              entry_x)
-      ) {
-
-        entry_group <- "Spleen"
-
-      } else if (
-        grepl("stomach",
-              entry_x)
-      ) {
-
-        entry_group <- "Stomach"
-
-      } else if (
-        grepl("testis",
-              entry_x)
-      ) {
-
-        entry_group <- "Testis"
-
-      } else if (
-        grepl("thyroid",
-              entry_x)
-      ) {
-
-        entry_group <- "Thyroid Gland"
-
-      } else if (
-        grepl("tibial nerve",
-              entry_x)
-      ) {
-
-        entry_group <- "Tibial Nerve"
-      }
-    }
-
-  # ===================================================
-  # OTHER DATASETS
-  # ===================================================
-
-  } else {
-
-    df$group <- gsub("_", " ", df$group)
     df$group <- tools::toTitleCase(
-      trimws(df$group)
+      df$group
     )
 
     if (!is.null(entry_group)) {
-      entry_group <- gsub("_", " ", entry_group)
+
+      entry_group <- gsub(
+        "_",
+        " ",
+        entry_group
+      )
+
       entry_group <- tools::toTitleCase(
-        trimws(entry_group)
+        entry_group
       )
     }
   }
-
-  # ===================================================
-  # RETURN
-  # ===================================================
 
   list(
     df = df,
@@ -396,56 +452,194 @@ clean_labels <- function(df, path, entry_group = NULL) {
   )
 }
 
+
 # =====================================================
-# MATCH HIGHLIGHT
+# MATCH SELECTED TISSUE
 # =====================================================
 
-match_entry <- function(df_group, entry_group) {
+match_entry <- function(
+    df_tissue,
+    entry_tissue
+) {
 
-  clean_df <- gsub("[^a-z]", "", tolower(df_group))
-  clean_entry <- gsub("[^a-z]", "", tolower(entry_group))
+  if (
+    is.null(entry_tissue) ||
+    is.na(entry_tissue) ||
+    entry_tissue == ""
+  ) {
+    return(
+      rep(FALSE, length(df_tissue))
+    )
+  }
+
+  clean_df <- gsub(
+    "[^a-z]",
+    "",
+    tolower(df_tissue)
+  )
+
+  clean_entry <- gsub(
+    "[^a-z]",
+    "",
+    tolower(entry_tissue)
+  )
 
   clean_df == clean_entry |
-    startsWith(clean_df, clean_entry) |
-    grepl(clean_entry, clean_df)
+    startsWith(
+      clean_df,
+      clean_entry
+    )
 }
+
+
+# =====================================================
+# RESOLVE ENCODE SC PREDICTED PCA
+# =====================================================
+
+resolve_pca_path <- function(path) {
+
+  # The labeled predicted PCA contains only:
+  # PC1, PC2, group
+  #
+  # The companion predicted PCA contains:
+  # name, PC1, PC2
+  #
+  # We need the name so that cell type and tissue
+  # can be parsed.
+
+  if (
+    grepl(
+      "encode_sc_predicted_labeled\\.tsv\\.gz$",
+      path,
+      ignore.case = TRUE
+    )
+  ) {
+
+    candidate <- sub(
+      "encode_sc_predicted_labeled\\.tsv\\.gz$",
+      "encode_sc_predicted_pca.tsv.gz",
+      path,
+      ignore.case = TRUE
+    )
+
+    if (file.exists(candidate)) {
+      return(candidate)
+    }
+  }
+
+  path
+}
+
 
 # =====================================================
 # BUILD PCA
 # =====================================================
 
-build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
+build_type_pca <- function(
+    path,
+    entry_group = NULL,
+    title = "PCA"
+) {
 
-  df <- read.table(
-    gzfile(path),
-    header = TRUE,
-    sep = "\t",
-    stringsAsFactors = FALSE
+  req(path)
+
+  # Use coordinate file for ENCODE SC predicted PCA
+  actual_path <- resolve_pca_path(
+    path
   )
-  
-  df <- normalise_pca_df(df)
 
-  cleaned <- clean_labels(df, path, entry_group)
+  df <- read_tsv_auto(
+    actual_path
+  )
+
+  df <- normalise_pca_df(
+    df
+  )
+
+  # ---------------------------------------------------
+  # Clean labels
+  # ---------------------------------------------------
+
+  cleaned <- clean_labels(
+    df,
+    actual_path,
+    entry_group
+  )
+
   df <- cleaned$df
   entry_group <- cleaned$entry_group
 
-  pve <- attr(df, "pve")
-
-  df$hover_text <- paste0(
-    "<b>", df$name, "</b><br>Group: ", df$group
+  pve <- attr(
+    df,
+    "pve"
   )
 
-  x_lab <- if (!is.null(pve)) {
-    paste0("PC1 (", round(pve[1], 1), "%)")
+  # ---------------------------------------------------
+  # Hover text
+  # ---------------------------------------------------
+
+  if (
+    grepl(
+      "encode_sc",
+      actual_path,
+      ignore.case = TRUE
+    )
+  ) {
+
+    df$hover_text <- paste0(
+      "<b>",
+      df$name,
+      "</b>",
+      "<br>Tissue: ",
+      df$tissue,
+      "<br>Cell type: ",
+      df$celltype
+    )
+
   } else {
+
+    df$hover_text <- paste0(
+      "<b>",
+      df$name,
+      "</b>",
+      "<br>Group: ",
+      df$group
+    )
+  }
+
+  # ---------------------------------------------------
+  # Axis labels
+  # ---------------------------------------------------
+
+  x_lab <- if (!is.null(pve)) {
+
+    paste0(
+      "PC1 (",
+      round(pve[1], 1),
+      "%)"
+    )
+
+  } else {
+
     "PC1"
   }
 
   y_lab <- if (!is.null(pve)) {
-    paste0("PC2 (", round(pve[2], 1), "%)")
+
+    paste0(
+      "PC2 (",
+      round(pve[2], 1),
+      "%)"
+    )
+
   } else {
+
     "PC2"
   }
+
+  # ---------------------------------------------------
+  # Main plot
+  # ---------------------------------------------------
 
   p <- plot_ly(
     data = df,
@@ -453,282 +647,420 @@ build_type_pca <- function(path, entry_group = NULL, title = "PCA") {
     y = ~PC2,
     type = "scatter",
     mode = "markers",
+
+    # IMPORTANT:
+    # ENCODE SC = cell type
+    # Everything else = existing group
     color = ~group,
+
     text = ~hover_text,
     hoverinfo = "text",
+
     marker = list(
       size = 7,
       opacity = 0.55
     )
   )
 
-  if (!is.null(entry_group)) {
+  # ---------------------------------------------------
+  # Highlight selected TISSUE
+  # ---------------------------------------------------
+
+  if (
+    !is.null(entry_group) &&
+    grepl(
+      "encode_sc",
+      actual_path,
+      ignore.case = TRUE
+    )
+  ) {
 
     hl <- df[
-      match_entry(df$group, entry_group),
+      match_entry(
+        df$tissue,
+        entry_group
+      ),
       ,
       drop = FALSE
     ]
 
-    if (nrow(hl) > 0) {
-      p <- p %>%
-        add_trace(
-          data = hl,
-          x = ~PC1,
-          y = ~PC2,
-          type = "scatter",
-          mode = "markers",
-          marker = list(
-            symbol = "diamond",
-            size = 11,
-            color = "#F59E0B",
-            line = list(
-              color = "black",
-              width = 2
-            )
-          ),
-          name = paste0(entry_group, " (selected)"),
-          inherit = FALSE
-        )
-    }
+  } else {
+
+    hl <- df[
+      match_entry(
+        df$group,
+        entry_group
+      ),
+      ,
+      drop = FALSE
+    ]
   }
 
+  if (nrow(hl) > 0) {
+
+    p <- p %>%
+
+      add_trace(
+        data = hl,
+
+        x = ~PC1,
+        y = ~PC2,
+
+        type = "scatter",
+        mode = "markers",
+
+        marker = list(
+          symbol = "diamond",
+          size = 11,
+          color = "#F59E0B",
+          line = list(
+            color = "black",
+            width = 2
+          )
+        ),
+
+        name = paste0(
+          entry_group,
+          " (selected)"
+        ),
+
+        inherit = FALSE,
+
+        hoverinfo = "text",
+        text = ~hover_text
+      )
+  }
+
+  # ---------------------------------------------------
+  # Layout
+  # ---------------------------------------------------
+
   p %>%
+
     layout(
       title = title,
-      legend = list(title = list(text = "Group")),
-      xaxis = list(title = x_lab),
-      yaxis = list(title = y_lab)
+
+      legend = list(
+        title = list(
+          text = if (
+            grepl(
+              "encode_sc",
+              actual_path,
+              ignore.case = TRUE
+            )
+          ) {
+            "Cell Type"
+          } else {
+            "Group"
+          }
+        )
+      ),
+
+      xaxis = list(
+        title = x_lab
+      ),
+
+      yaxis = list(
+        title = y_lab
+      )
     )
 }
+
 
 # =====================================================
 # BUILD UMAP
 # =====================================================
 
-build_type_umap <- function(path, entry_group = NULL, title = "UMAP") {
+build_type_umap <- function(
+    path,
+    entry_group = NULL,
+    title = "UMAP"
+) {
 
-  df <- read.table(
-    gzfile(path),
-    header = TRUE,
-    sep = "\t",
-    stringsAsFactors = FALSE
+  req(path)
+
+  df <- read_tsv_auto(
+    path
   )
 
-  # =====================================================
-  # ENCODE SINGLE-CELL
-  # =====================================================
+  # ---------------------------------------------------
+  # Make sure name exists
+  # ---------------------------------------------------
 
-  if (grepl("encode_sc", path, ignore.case = TRUE)) {
+  if (!"name" %in% colnames(df)) {
 
-    # Find the column containing the original Level3 labels
-    label_candidates <- c("name", "label", "celltype", "group")
+    df$name <- rownames(df)
+  }
 
-    label_col <- label_candidates[
-      label_candidates %in% colnames(df)
-    ][1]
+  # ---------------------------------------------------
+  # ENCODE SINGLE CELL
+  #
+  # Derive:
+  #   tissue
+  #   celltype
+  #
+  # from sample name.
+  # ---------------------------------------------------
 
-    if (!is.na(label_col) && length(label_col) > 0) {
+  if (
+    grepl(
+      "encode_sc",
+      path,
+      ignore.case = TRUE
+    )
+  ) {
 
-      # Preserve full original label for hover
-      df$name <- as.character(df[[label_col]])
+    parsed <- parse_encode_sc_name(
+      df$name
+    )
 
-      # Convert:
-      # level3-Homo_sapiens-adrenal_gland-adrenal_cortical_cell-adult_child.rds
-      #
-      # into:
-      # Adrenal Gland
+    df$tissue <- parsed$tissue
+    df$celltype <- parsed$celltype
 
-      tissue <- df$name
-
-      tissue <- gsub(
-        "^level3-(Homo_sapiens|Mus_musculus)-",
-        "",
-        tissue,
-        ignore.case = TRUE
-      )
-
-      # Explicitly match the 13 database tissues
-      encode_sc_tissues <- c(
-        "adrenal_gland",
-        "bile_duct",
-        "brain",
-        "colon",
-        "fallopian_tube",
-        "heart",
-        "liver",
-        "lung",
-        "muscle",
-        "ovary",
-        "pancreas",
-        "placenta",
-        "ureter",
-        "uterus"
-      )
-
-      tissue <- vapply(
-        tissue,
-        function(x) {
-
-          matches <- encode_sc_tissues[
-            startsWith(
-              tolower(x),
-              paste0(tolower(encode_sc_tissues), "-")
-            )
-          ]
-
-          if (length(matches) > 0) {
-            matches[1]
-          } else {
-            "other"
-          }
-        },
-        character(1)
-      )
-
-      df$group <- gsub("_", " ", tissue)
-      df$group <- tools::toTitleCase(df$group)
-
-    } else {
-
-      df$name <- rownames(df)
-      df$group <- "Other"
-    }
-
-    # Make selected entry use same naming convention
-    if (!is.null(entry_group)) {
-      entry_group <- gsub("_", " ", entry_group)
-      entry_group <- tools::toTitleCase(trimws(entry_group))
-    }
-
-  # =====================================================
-  # ALL OTHER DATASETS
-  # =====================================================
+    # Color by CELL TYPE
+    df$group <- df$celltype
 
   } else {
 
-    if ("generaltissue" %in% colnames(df)) {
+    # -------------------------------------------------
+    # Existing behavior for all other datasets
+    # -------------------------------------------------
+
+    if (
+      "generaltissue" %in%
+      colnames(df)
+    ) {
+
       df$group <- df$generaltissue
-    } else if ("celltype" %in% colnames(df)) {
+
+    } else if (
+      "celltype" %in%
+      colnames(df)
+    ) {
+
       df$group <- df$celltype
-    } else if ("label" %in% colnames(df)) {
+
+    } else if (
+      "label" %in%
+      colnames(df)
+    ) {
+
       df$group <- df$label
-    } else if ("group" %in% colnames(df)) {
+
+    } else if (
+      "group" %in%
+      colnames(df)
+    ) {
+
       df$group <- df$group
-    } else if ("name" %in% colnames(df)) {
-      df$group <- df$name
+
     } else {
-      df$group <- "Sample"
+
+      df$group <- df$name
     }
-
-    if (!"name" %in% colnames(df)) {
-      df$name <- rownames(df)
-    }
-
-    cleaned <- clean_labels(df, path, entry_group)
-
-    df <- cleaned$df
-    entry_group <- cleaned$entry_group
   }
 
-  # =====================================================
-  # HOVER TEXT
-  # =====================================================
+  # ---------------------------------------------------
+  # Clean labels
+  # ---------------------------------------------------
 
-  df$hover_text <- paste0(
-    "<b>", df$name, "</b>",
-    "<br>Group: ", df$group
+  cleaned <- clean_labels(
+    df,
+    path,
+    entry_group
   )
 
-  # =====================================================
-  # BASE UMAP
-  # =====================================================
+  df <- cleaned$df
+  entry_group <- cleaned$entry_group
+
+  # ---------------------------------------------------
+  # Hover text
+  # ---------------------------------------------------
+
+  if (
+    grepl(
+      "encode_sc",
+      path,
+      ignore.case = TRUE
+    )
+  ) {
+
+    df$hover_text <- paste0(
+      "<b>",
+      df$name,
+      "</b>",
+      "<br>Tissue: ",
+      df$tissue,
+      "<br>Cell type: ",
+      df$celltype
+    )
+
+  } else {
+
+    df$hover_text <- paste0(
+      "<b>",
+      df$name,
+      "</b>",
+      "<br>Group: ",
+      df$group
+    )
+  }
+
+  # ---------------------------------------------------
+  # Main plot
+  # ---------------------------------------------------
 
   p <- plot_ly(
     data = df,
+
     x = ~UMAP1,
     y = ~UMAP2,
+
     type = "scatter",
     mode = "markers",
+
+    # ENCODE SC = cell type
     color = ~group,
+
     text = ~hover_text,
     hoverinfo = "text",
+
     marker = list(
       size = 7,
       opacity = 0.55
     )
   )
 
-  # =====================================================
-  # HIGHLIGHT SELECTED ENTRY
-  # =====================================================
+  # ---------------------------------------------------
+  # Highlight selected TISSUE
+  # ---------------------------------------------------
 
-  if (!is.null(entry_group)) {
+  if (
+    !is.null(entry_group) &&
+    grepl(
+      "encode_sc",
+      path,
+      ignore.case = TRUE
+    )
+  ) {
 
     hl <- df[
-      match_entry(df$group, entry_group),
+      match_entry(
+        df$tissue,
+        entry_group
+      ),
       ,
       drop = FALSE
     ]
 
-    if (nrow(hl) > 0) {
+  } else {
 
-      p <- p %>%
-        add_trace(
-          data = hl,
-          x = ~UMAP1,
-          y = ~UMAP2,
-          type = "scatter",
-          mode = "markers",
-          text = ~hover_text,
-          hoverinfo = "text",
-          marker = list(
-            symbol = "diamond",
-            size = 11,
-            color = "#F59E0B",
-            line = list(
-              color = "black",
-              width = 2
-            )
-          ),
-          name = paste0(entry_group, " (selected)"),
-          inherit = FALSE
-        )
-    }
+    hl <- df[
+      match_entry(
+        df$group,
+        entry_group
+      ),
+      ,
+      drop = FALSE
+    ]
   }
 
-  # =====================================================
-  # LAYOUT
-  # =====================================================
+  if (nrow(hl) > 0) {
+
+    p <- p %>%
+
+      add_trace(
+        data = hl,
+
+        x = ~UMAP1,
+        y = ~UMAP2,
+
+        type = "scatter",
+        mode = "markers",
+
+        marker = list(
+          symbol = "diamond",
+          size = 11,
+          color = "#F59E0B",
+          line = list(
+            color = "black",
+            width = 2
+          )
+        ),
+
+        name = paste0(
+          entry_group,
+          " (selected)"
+        ),
+
+        inherit = FALSE,
+
+        hoverinfo = "text",
+        text = ~hover_text
+      )
+  }
+
+  # ---------------------------------------------------
+  # Layout
+  # ---------------------------------------------------
 
   p %>%
+
     layout(
       title = title,
+
       legend = list(
-        title = list(text = "Group")
+        title = list(
+          text = if (
+            grepl(
+              "encode_sc",
+              path,
+              ignore.case = TRUE
+            )
+          ) {
+            "Cell Type"
+          } else {
+            "Group"
+          }
+        )
       ),
-      xaxis = list(title = "UMAP1"),
-      yaxis = list(title = "UMAP2")
+
+      xaxis = list(
+        title = "UMAP1"
+      ),
+
+      yaxis = list(
+        title = "UMAP2"
+      )
     )
 }
+
 
 # =====================================================
 # BUILD VARIANCE
 # =====================================================
 
-build_variance <- function(path, title = "Variance Explained") {
+build_variance <- function(
+    path,
+    title = "Variance Explained"
+) {
 
-  df <- read.table(
-    gzfile(path),
-    header = TRUE,
-    sep = "\t",
-    stringsAsFactors = FALSE
+  df <- read_tsv_auto(
+    path
   )
 
-  df <- normalise_pca_df(df)
-  pve <- attr(df, "pve")
+  df <- normalise_pca_df(
+    df
+  )
 
-  if (is.null(pve)) return(NULL)
+  pve <- attr(
+    df,
+    "pve"
+  )
+
+  if (is.null(pve)) {
+    return(NULL)
+  }
 
   plot_df <- data.frame(
     PC = seq_along(pve),
@@ -737,14 +1069,23 @@ build_variance <- function(path, title = "Variance Explained") {
 
   plot_ly(
     data = plot_df,
+
     x = ~PC,
     y = ~Variance,
+
     type = "scatter",
     mode = "lines+markers"
   ) %>%
+
     layout(
       title = title,
-      xaxis = list(title = "Principal Component"),
-      yaxis = list(title = "Variance Explained (%)")
+
+      xaxis = list(
+        title = "Principal Component"
+      ),
+
+      yaxis = list(
+        title = "Variance Explained (%)"
+      )
     )
 }
