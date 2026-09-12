@@ -136,6 +136,164 @@ parse_encode_sc_name <- function(x) {
 
 
 # =====================================================
+# ENCODE BULK TISSUE MAPPING
+# =====================================================
+
+get_encode_bulk_tissue <- function(x) {
+
+  x <- tolower(
+    trimws(
+      as.character(x)
+    )
+  )
+
+  group <- rep(
+    NA_character_,
+    length(x)
+  )
+
+  # ---------------------------------------------------
+  # 19 EXISTING ENCODE BULK TISSUES
+  # ---------------------------------------------------
+
+  group[
+    grepl(
+      "adipose",
+      x
+    )
+  ] <- "Adipose Tissue"
+
+  group[
+    grepl(
+      "adrenal_gland|adrenal gland",
+      x
+    )
+  ] <- "Adrenal Gland"
+
+  group[
+    grepl(
+      "aorta",
+      x
+    )
+  ] <- "Aorta"
+
+  group[
+    grepl(
+      "large_intestine|large intestine|sigmoid_colon|sigmoid colon|transverse_colon|transverse colon|colon",
+      x
+    )
+  ] <- "Colon"
+
+  group[
+    grepl(
+      "esophagus",
+      x
+    )
+  ] <- "Esophagus"
+
+  group[
+    grepl(
+      "heart",
+      x
+    )
+  ] <- "Heart"
+
+  group[
+    grepl(
+      "liver",
+      x
+    )
+  ] <- "Liver"
+
+  group[
+    grepl(
+      "lung",
+      x
+    )
+  ] <- "Lung"
+
+  group[
+    grepl(
+      "motor_neuron|motor neuron",
+      x
+    )
+  ] <- "Motor Neuron"
+
+  group[
+    grepl(
+      "muscle",
+      x
+    )
+  ] <- "Muscle"
+
+  group[
+    grepl(
+      "ovary",
+      x
+    )
+  ] <- "Ovary"
+
+  group[
+    grepl(
+      "pancreas",
+      x
+    )
+  ] <- "Pancreas"
+
+  group[
+    grepl(
+      "skin",
+      x
+    )
+  ] <- "Skin"
+
+  group[
+    grepl(
+      "small_intestine|small intestine",
+      x
+    )
+  ] <- "Small Intestine"
+
+  group[
+    grepl(
+      "spleen",
+      x
+    )
+  ] <- "Spleen"
+
+  group[
+    grepl(
+      "stomach",
+      x
+    )
+  ] <- "Stomach"
+
+  group[
+    grepl(
+      "testis",
+      x
+    )
+  ] <- "Testis"
+
+  group[
+    grepl(
+      "thyroid_gland|thyroid gland",
+      x
+    )
+  ] <- "Thyroid Gland"
+
+  group[
+    grepl(
+      "tibial_nerve|tibial nerve",
+      x
+    )
+  ] <- "Tibial Nerve"
+
+  group
+}
+
+
+# =====================================================
 # NORMALIZE PCA DATA
 # =====================================================
 
@@ -328,15 +486,40 @@ clean_labels <- function(
 
   # ---------------------------------------------------
   # ENCODE BULK
+  #
+  # group = TISSUE
   # ---------------------------------------------------
 
   } else if (
     grepl(
-      "encode",
+      "encode_bulk",
       path,
       ignore.case = TRUE
     )
   ) {
+
+    df$group <- get_encode_bulk_tissue(
+      df$name
+    )
+
+    if (!is.null(entry_group)) {
+
+      entry_group <- gsub(
+        "_",
+        " ",
+        entry_group
+      )
+
+      entry_group <- tools::toTitleCase(
+        entry_group
+      )
+    }
+
+  # ---------------------------------------------------
+  # OTHER DATASETS
+  # ---------------------------------------------------
+
+  } else {
 
     df$group <- gsub(
       "^Homo sapiens ",
@@ -647,15 +830,9 @@ build_type_pca <- function(
     y = ~PC2,
     type = "scatter",
     mode = "markers",
-
-    # IMPORTANT:
-    # ENCODE SC = cell type
-    # Everything else = existing group
     color = ~group,
-
     text = ~hover_text,
     hoverinfo = "text",
-
     marker = list(
       size = 7,
       opacity = 0.55
@@ -663,7 +840,7 @@ build_type_pca <- function(
   )
 
   # ---------------------------------------------------
-  # Highlight selected TISSUE
+  # Highlight selected tissue
   # ---------------------------------------------------
 
   if (
@@ -750,6 +927,14 @@ build_type_pca <- function(
             )
           ) {
             "Cell Type"
+          } else if (
+            grepl(
+              "encode_bulk",
+              actual_path,
+              ignore.case = TRUE
+            )
+          ) {
+            "Tissue"
           } else {
             "Group"
           }
@@ -820,11 +1005,29 @@ build_type_umap <- function(
     # Color by CELL TYPE
     df$group <- df$celltype
 
-  } else {
+  # ---------------------------------------------------
+  # ENCODE BULK
+  #
+  # Color by TISSUE using sample name.
+  # ---------------------------------------------------
 
-    # -------------------------------------------------
-    # Existing behavior for all other datasets
-    # -------------------------------------------------
+  } else if (
+    grepl(
+      "encode_bulk",
+      path,
+      ignore.case = TRUE
+    )
+  ) {
+
+    df$group <- get_encode_bulk_tissue(
+      df$name
+    )
+
+  # ---------------------------------------------------
+  # OTHER DATASETS
+  # ---------------------------------------------------
+
+  } else {
 
     if (
       "generaltissue" %in%
@@ -912,19 +1115,13 @@ build_type_umap <- function(
 
   p <- plot_ly(
     data = df,
-
     x = ~UMAP1,
     y = ~UMAP2,
-
     type = "scatter",
     mode = "markers",
-
-    # ENCODE SC = cell type
     color = ~group,
-
     text = ~hover_text,
     hoverinfo = "text",
-
     marker = list(
       size = 7,
       opacity = 0.55
@@ -932,7 +1129,7 @@ build_type_umap <- function(
   )
 
   # ---------------------------------------------------
-  # Highlight selected TISSUE
+  # Highlight selected tissue
   # ---------------------------------------------------
 
   if (
@@ -1019,6 +1216,14 @@ build_type_umap <- function(
             )
           ) {
             "Cell Type"
+          } else if (
+            grepl(
+              "encode_bulk",
+              path,
+              ignore.case = TRUE
+            )
+          ) {
+            "Tissue"
           } else {
             "Group"
           }
