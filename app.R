@@ -28,6 +28,15 @@ ui <- navbarPage(
       rel = "stylesheet",
       type = "text/css",
       href = paste0("styles.css?v=", Sys.time())
+    ),
+    tags$link(
+      rel = "stylesheet",
+      type = "text/css",
+      href = paste0("polish.css?v=", Sys.time())
+    ),
+    tags$script(
+      src = paste0("polish.js?v=", Sys.time()),
+      defer = NA
     )
   ),
 

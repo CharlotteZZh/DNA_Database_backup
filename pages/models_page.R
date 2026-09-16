@@ -3,32 +3,37 @@ library(shiny)
 models_ui <- function() {
   
   fluidPage(
+    class = "site-page models-page",
+
     
     div(
       style = "max-width:1400px; margin:auto; padding-top:30px;",
       
-      h1(
-        style = "
-          font-size:56px;
-          font-weight:900;
-          margin-bottom:20px;
-          background: linear-gradient(90deg, #7C3AED, #2563EB);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        ",
-        "Prediction Models"
+      div(
+        class = "page-heading",
+        h1(
+          style = "
+            font-size:56px;
+            font-weight:900;
+            margin-bottom:20px;
+            background: linear-gradient(90deg, #7C3AED, #2563EB);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          ",
+          "Prediction Models"
+        ),
+
+        p(
+          style = "
+            font-size:20px;
+            color:#64748B;
+            margin-bottom:40px;
+            max-width:950px;
+          ",
+          "MethylProphetDB integrates multiple transcriptome-to-methylome prediction frameworks for large-scale epigenomic reconstruction across tissues, cancers, and single-cell systems."
+        )
       ),
-      
-      p(
-        style = "
-          font-size:20px;
-          color:#64748B;
-          margin-bottom:40px;
-          max-width:950px;
-        ",
-        "MethylProphetDB integrates multiple transcriptome-to-methylome prediction frameworks for large-scale epigenomic reconstruction across tissues, cancers, and single-cell systems."
-      ),
-      
+
       # =========================================
       # MODEL CARDS
       # =========================================
@@ -40,7 +45,7 @@ models_ui <- function() {
           4,
           
           div(
-            class = "feature-card",
+            class = "feature-card model-card model-dreamland",
             style = "
               border-top: 8px solid #8B5CF6;
               min-height:650px;
@@ -105,7 +110,7 @@ models_ui <- function() {
           4,
           
           div(
-            class = "feature-card",
+            class = "feature-card model-card model-methylprophet",
             style = "
               border-top: 8px solid #2563EB;
               min-height:650px;
@@ -179,7 +184,7 @@ models_ui <- function() {
           4,
           
           div(
-            class = "feature-card",
+            class = "feature-card model-card model-ramp",
             style = "
               border-top: 8px solid #F59E0B;
               min-height:650px;
@@ -240,7 +245,7 @@ models_ui <- function() {
       # =========================================
       
       div(
-        class = "feature-card",
+        class = "feature-card model-comparison",
         style = "
           border-left:8px solid #06B6D4;
         ",
@@ -298,7 +303,7 @@ models_ui <- function() {
       # =========================================
       
       div(
-        class = "feature-card",
+        class = "feature-card model-resources",
         style = "
           background: linear-gradient(135deg,#F8FAFC,#EFF6FF);
         ",

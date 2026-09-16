@@ -857,6 +857,8 @@ build_spatial_plot <- function(
 entry_ui <- function() {
 
   fluidPage(
+    class = "site-page entry-page",
+
 
     # Hidden reactive output used to switch
     # between spatial and standard entries.

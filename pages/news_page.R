@@ -3,33 +3,38 @@ library(shiny)
 news_ui <- function() {
 
   fluidPage(
+    class = "site-page news-page",
+
 
     div(
       style = "max-width:1400px; margin:auto; padding-top:30px;",
 
-      h1(
-        style = "
-          font-size:56px;
-          font-weight:900;
-          margin-bottom:20px;
-          background: linear-gradient(90deg, #0F766E, #2563EB);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        ",
-        "News"
-      ),
+      div(
+        class = "page-heading",
+        h1(
+          style = "
+            font-size:56px;
+            font-weight:900;
+            margin-bottom:20px;
+            background: linear-gradient(90deg, #0F766E, #2563EB);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          ",
+          "News"
+        ),
 
-      p(
-        style = "
-          font-size:20px;
-          color:#64748B;
-          margin-bottom:30px;
-        ",
-        "Latest updates, new datasets, and model releases."
+        p(
+          style = "
+            font-size:20px;
+            color:#64748B;
+            margin-bottom:30px;
+          ",
+          "Latest updates, new datasets, and model releases."
+        )
       ),
 
       div(
-        class = "feature-card",
+        class = "feature-card news-updates",
 
         h2("Latest Updates"),
 
@@ -44,7 +49,7 @@ news_ui <- function() {
       br(),
 
       div(
-        class = "feature-card",
+        class = "feature-card news-upcoming",
 
         h2("Coming Soon"),
 

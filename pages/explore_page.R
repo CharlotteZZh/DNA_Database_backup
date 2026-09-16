@@ -4,6 +4,8 @@ library(DT)
 explore_ui <- function() {
   
   fluidPage(
+    class = "site-page datasets-page",
+
     
     div(
       style = "
@@ -22,7 +24,7 @@ explore_ui <- function() {
           width = 3,
           
           div(
-            class = "feature-card",
+            class = "feature-card dataset-filters",
             
             h1(
               style = "
@@ -100,7 +102,7 @@ explore_ui <- function() {
           width = 9,
           
           div(
-            class = "feature-card",
+            class = "feature-card dataset-results",
             
             h2(
               style = "
