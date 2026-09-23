@@ -21,9 +21,9 @@ home_ui <- function() {
         p(
           class = "hero-text",
           paste(
-            "Browse reconstructed methylomes from ENCODE, TCGA, GTEx,",
-            "and other public resources to study epigenomic regulation",
-            "across tissues, cell types, disease states, and spatial contexts."
+            "Browse DNA methylation predicted from ENCODE, GTEx, TCGA, TARGET,",
+            "CPTAC-3, and other public transcriptomic resources to study epigenomic",
+            "regulation across tissues, cell types, cancers, and spatial contexts."
           )
         ),
 
@@ -51,11 +51,11 @@ home_ui <- function() {
         h2("Overview"),
 
         p(
-          "MethylProphetDB is a public database of predicted DNA methylation landscapes reconstructed from transcriptomic data."
+          "MethylProphetDB is a public database of DNA methylation landscapes predicted from bulk, single-cell, and spatial transcriptomic data."
         ),
 
         p(
-          "The current release integrates ENCODE, GTEx, TCGA, and ENCODE4 single-cell datasets together with matched gold-standard methylation profiles."
+          "The current release contains 99 entries from ENCODE, GTEx, TCGA, TARGET, CGCI-HTMCP-CC, CPTAC-3, HCMIC-CMDC, ENCODE4 single-cell, and spatial transcriptomics datasets. Where measured methylation is available (WGBS, 450K, or EPIC), it is provided as a gold-standard reference alongside the predictions."
         )
       ),
 
@@ -70,7 +70,7 @@ home_ui <- function() {
             h3("Interactive PCA"),
 
             p(
-              "Visualize tissue and cell-type methylation landscapes interactively."
+              "Compare input RNA, predicted DNAm, and gold-standard DNAm across tissues, cancer types, and cell types."
             )
           )
         ),
@@ -83,7 +83,7 @@ home_ui <- function() {
             h3("UMAP Embeddings"),
 
             p(
-              "Explore nonlinear methylation structure across single-cell and spatial datasets."
+              "Explore nonlinear structure in bulk, cancer, and single-cell datasets."
             )
           )
         ),
@@ -93,10 +93,10 @@ home_ui <- function() {
           div(
             class = "feature-card about-feature",
 
-            h3("Prediction Workflow"),
+            h3("Spatial Methylation Maps"),
 
             p(
-              "Reconstruct genome-wide methylation landscapes from transcriptomic measurements."
+              "View predicted methylation across tissue sections, starting with four mouse embryo slides."
             )
           )
         )
@@ -108,16 +108,19 @@ home_ui <- function() {
         h2("Database Contents"),
 
         p(
-          "MethylProphetDB integrates transcriptomic and methylation resources across bulk, cancer, and single-cell datasets."
+          "MethylProphetDB brings together transcriptomic and methylation resources from normal tissues, cancers, single-cell atlases, and spatial transcriptomics."
         ),
 
         tags$ul(
           class = "about-resource-grid",
-          tags$li(strong("ENCODE bulk: "), span(class = "resource-value", "95"), " matched RNA-seq and WGBS samples"),
+          tags$li(strong("ENCODE bulk: "), span(class = "resource-value", "95"), " matched RNA-seq and WGBS samples across 19 tissues"),
           tags$li(strong("GTEx: "), span(class = "resource-value", "9"), " normal human tissues"),
-          tags$li(strong("TCGA 450K: "), span(class = "resource-value", "9,194"), " tumor samples"),
-          tags$li(strong("TCGA WGBS: "), span(class = "resource-value", "33"), " tumor samples"),
-          tags$li(strong("ENCODE4 single-cell: "), "human and mouse pseudobulk atlases")
+          tags$li(strong("TCGA 450K: "), span(class = "resource-value", "9,194"), " tumor samples across 32 cancer types"),
+          tags$li(strong("TCGA WGBS: "), span(class = "resource-value", "33"), " tumor samples across 8 cancer types"),
+          tags$li(strong("TARGET: "), span(class = "resource-value", "605"), " pediatric tumor samples across 8 cohorts (450K and EPIC)"),
+          tags$li(strong("CGCI-HTMCP-CC, CPTAC-3, HCMIC-CMDC: "), span(class = "resource-value", "1,360"), " tumor samples (EPIC)"),
+          tags$li(strong("ENCODE4 single-cell: "), "pseudobulk profiles from 13 human and 4 mouse tissues, plus human PBMC"),
+          tags$li(strong("Spatial transcriptomics: "), "mouse embryo (4 slides); mouse pancreas coming soon")
         ),
 
         br(),
@@ -129,8 +132,9 @@ home_ui <- function() {
           tags$li("Input RNA matrices"),
           tags$li("Predicted DNA methylation matrices"),
           tags$li("Gold-standard methylation profiles"),
-          tags$li("Genome browser tracks (bedGraph)"),
-          tags$li("Interactive PCA and UMAP embeddings")
+          tags$li("Genome browser DNAm tracks (bedGraph)"),
+          tags$li("Interactive PCA and UMAP embeddings"),
+          tags$li("Spatial methylation maps")
         )
       ),
 
@@ -142,7 +146,7 @@ home_ui <- function() {
           h2("Interactive PCA Visualization"),
 
           p(
-            "PCA is performed on highly variable CpG loci to preserve methylation structure and global epigenomic organization across tissues, cancer types, and pseudobulk single-cell populations."
+            "Each dataset includes precomputed PCA embeddings, so you can compare how samples group by tissue, cancer type, or pseudobulk cell population. Views are shown where the data exist:"
           ),
 
           tags$ul(
@@ -159,7 +163,8 @@ home_ui <- function() {
           tags$ul(
             tags$li("Cross-tissue methylation analysis"),
             tags$li("Pan-cancer epigenomic analysis"),
-            tags$li("Single-cell methylation profiling"),
+            tags$li("Cell-type-level methylation inference from single-cell RNA-seq"),
+            tags$li("Spatial methylation mapping"),
             tags$li("Transcriptome-guided epigenomic inference"),
             tags$li("Biomarker hypothesis generation")
           )

@@ -144,8 +144,22 @@
     const ctx = canvas && canvas.getContext("2d");
     if (!ctx) return; // The static SVG background is the fallback.
     const art = canvas.parentElement;
-    let width = 0, height = 0, phase = 0.7, frame = 0;
+    let width = 0, height = 0, phase = 0.7, clock = 0, frame = 0;
     let visible = false, lastTime = null;
+    const tilt = -0.34;
+    const font = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
+    // CpG dinucleotides sit on selected base-pair rungs. Methylation is
+    // symmetric, so each site carries a 5mC on both strands.
+    const cpgSites = new Map();
+    for (let i = 3; i <= 90; i += 3) {
+      if ((i * 7) % 11 < 5) cpgSites.set(i, { seed: (i * 2.39996) % (Math.PI * 2) });
+    }
+    // Slow write/erase cycle (DNMT adds, TET removes): 0 = unmethylated, 1 = 5mC.
+    function methylation(site) {
+      const wave = Math.sin(clock * 0.35 + site.seed);
+      return Math.min(1, Math.max(0, (wave + 0.7) / 0.7));
+    }
 
     function point(index, strand) {
       const t = index / 92;
@@ -153,13 +167,71 @@
       const depth = Math.cos(angle);
       const x = Math.sin(angle) * width * 0.19;
       const y = (t - 0.5) * height * 0.82;
-      const tilt = -0.34;
       return {
         x: width * 0.51 + x * Math.cos(tilt) - y * Math.sin(tilt),
         y: height * 0.49 + x * Math.sin(tilt) + y * Math.cos(tilt),
+        angle,
         depth,
         r: 2 + (depth + 1) * 1.7
       };
+    }
+
+    function drawNode(p) {
+      const opacity = 0.25 + (p.depth + 1) * 0.35;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.strand ? "170,226,225" : "220,250,173"},${opacity})`;
+      ctx.shadowColor = p.strand ? "#a4dfe0" : "#d2f4a2";
+      ctx.shadowBlur = p.depth > 0.5 ? 12 : 0;
+      ctx.fill(); ctx.shadowBlur = 0;
+    }
+
+    // A methyl group branches outward from the cytosine; unmethylated CpGs
+    // show an open ring instead. Levels between 0 and 1 cross-fade the two.
+    function drawMethyl(p) {
+      const level = p.level;
+      const alpha = 0.3 + (p.depth + 1) * 0.35;
+      const side = Math.sin(p.angle) >= 0 ? 1 : -1;
+      const reach = (7 + Math.abs(Math.sin(p.angle)) * 9) * (0.35 + level * 0.65);
+      const mx = p.x + side * Math.cos(tilt) * reach;
+      const my = p.y + side * Math.sin(tilt) * reach;
+      if (level < 0.98) {
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(140,216,205,${alpha * (1 - level) * 0.9})`;
+        ctx.lineWidth = 1.2; ctx.stroke();
+      }
+      if (level > 0.02) {
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mx, my);
+        ctx.strokeStyle = `rgba(246,214,128,${alpha * level * 0.8})`;
+        ctx.lineWidth = 1.3; ctx.stroke();
+        ctx.beginPath(); ctx.arc(mx, my, (1.8 + level * 2.4) * (0.75 + (p.depth + 1) * 0.2), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(250,216,120,${alpha * level})`;
+        ctx.shadowColor = "#f7d57a";
+        ctx.shadowBlur = 6 + level * 10;
+        ctx.fill(); ctx.shadowBlur = 0;
+        if (level > 0.75 && p.depth > 0.35 && width > 320) {
+          ctx.font = `600 9px ${font}`;
+          ctx.textAlign = side > 0 ? "left" : "right";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = `rgba(250,226,160,${(level - 0.75) * 4 * (p.depth - 0.35) * 1.3})`;
+          ctx.fillText("CH₃", mx + side * 7, my);
+        }
+      }
+    }
+
+    function drawLegend() {
+      if (width < 280) return;
+      const x = 14, y = height - 18;
+      ctx.font = `500 10px ${font}`;
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.beginPath(); ctx.arc(x, y - 16, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(250,216,120,.95)"; ctx.shadowColor = "#f7d57a"; ctx.shadowBlur = 8;
+      ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(230,245,205,.72)";
+      ctx.fillText("5mC · methylated CpG", x + 11, y - 16);
+      ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(140,216,205,.9)"; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.fillStyle = "rgba(230,245,205,.72)";
+      ctx.fillText("unmethylated CpG", x + 11, y);
     }
 
     function draw() {
@@ -174,17 +246,25 @@
         ctx.fillStyle = i % 5 === 0 ? "rgba(210,246,170,.6)" : "rgba(210,246,170,.22)";
         ctx.fill();
       }
-      // The illustration is an abstract helix, not an analytical visualization.
+      // An illustrative methylated helix, not an analytical visualization.
       for (let i = 0; i <= 92; i += 3) {
         const a = point(i, 0), b = point(i, 1);
+        const site = cpgSites.get(i);
+        const level = site ? methylation(site) : 0;
         const gradient = ctx.createLinearGradient(a.x, a.y, b.x + 0.01, b.y);
-        gradient.addColorStop(0, "rgba(206,247,160,.55)");
-        gradient.addColorStop(0.5, "rgba(160,213,187,.14)");
-        gradient.addColorStop(1, "rgba(156,211,225,.5)");
+        if (site) {
+          gradient.addColorStop(0, `rgba(${Math.round(206 + 40 * level)},${Math.round(247 - 30 * level)},${Math.round(160 - 30 * level)},.8)`);
+          gradient.addColorStop(0.5, `rgba(240,220,150,${0.18 + level * 0.25})`);
+          gradient.addColorStop(1, `rgba(${Math.round(156 + 90 * level)},${Math.round(211 + 4 * level)},${Math.round(225 - 95 * level)},.75)`);
+        } else {
+          gradient.addColorStop(0, "rgba(206,247,160,.55)");
+          gradient.addColorStop(0.5, "rgba(160,213,187,.14)");
+          gradient.addColorStop(1, "rgba(156,211,225,.5)");
+        }
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = gradient; ctx.lineWidth = 1.4; ctx.stroke();
+        ctx.strokeStyle = gradient; ctx.lineWidth = site ? 2 : 1.4; ctx.stroke();
       }
-      const nodes = [];
+      const marks = [];
       for (let strand = 0; strand < 2; strand++) {
         for (let i = 0; i <= 92; i++) {
           const p = point(i, strand);
@@ -194,17 +274,16 @@
             ctx.strokeStyle = `rgba(${strand ? "168,222,221" : "216,249,174"},${0.22 + (p.depth + 1) * 0.24})`;
             ctx.lineWidth = 1.7; ctx.stroke();
           }
-          if (i % 2 === 0) nodes.push({ ...p, strand });
+          const site = cpgSites.get(i);
+          if (site) marks.push({ ...p, strand, level: methylation(site), cpg: true });
+          else if (i % 2 === 0) marks.push({ ...p, strand });
         }
       }
-      nodes.sort((a, b) => a.depth - b.depth).forEach(p => {
-        const opacity = 0.25 + (p.depth + 1) * 0.35;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.strand ? "170,226,225" : "220,250,173"},${opacity})`;
-        ctx.shadowColor = p.strand ? "#a4dfe0" : "#d2f4a2";
-        ctx.shadowBlur = p.depth > 0.5 ? 12 : 0;
-        ctx.fill(); ctx.shadowBlur = 0;
+      marks.sort((a, b) => a.depth - b.depth).forEach(p => {
+        drawNode(p);
+        if (p.cpg) drawMethyl(p);
       });
+      drawLegend();
       art.classList.add("is-rendered");
     }
 
@@ -219,7 +298,11 @@
     function tick(time) {
       frame = 0;
       if (!visible || document.hidden || motionStopped()) { lastTime = null; return; }
-      if (lastTime !== null) phase = (phase + Math.min(time - lastTime, 60) * 0.0005) % (Math.PI * 2);
+      if (lastTime !== null) {
+        const elapsed = Math.min(time - lastTime, 60);
+        phase = (phase + elapsed * 0.0005) % (Math.PI * 2);
+        clock += elapsed * 0.001;
+      }
       lastTime = time;
       draw();
       frame = requestAnimationFrame(tick);
