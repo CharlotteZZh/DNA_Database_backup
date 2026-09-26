@@ -333,6 +333,33 @@ explore_server <- function(
           
           var clicked_id = $(this).data('id');
           
+          // Show a loading overlay until the entry page opens.
+          var overlay = $('#entry-opening-overlay');
+          if (!overlay.length) {
+            overlay = $(
+              '<div id=entry-opening-overlay role=status aria-live=polite>' +
+                '<div class=entry-opening-card>' +
+                  '<span class=entry-opening-spinner aria-hidden=true></span>' +
+                  '<div><strong>Loading entry...</strong>' +
+                  '<span class=entry-opening-name></span></div>' +
+                '</div>' +
+              '</div>'
+            ).appendTo('body');
+          }
+          overlay.find('.entry-opening-name').text($(this).text());
+          overlay.addClass('is-visible');
+          
+          var hideOverlay = function() {
+            overlay.removeClass('is-visible');
+            clearTimeout(overlay.data('timer'));
+          };
+          $(document).one('shown.bs.tab', hideOverlay);
+          $(document).one('shiny:busy', function() {
+            $(document).one('shiny:idle', hideOverlay);
+          });
+          clearTimeout(overlay.data('timer'));
+          overlay.data('timer', setTimeout(hideOverlay, 120000));
+          
           Shiny.setInputValue(
             'selected_entry',
             clicked_id,

@@ -1015,6 +1015,9 @@ entry_ui <- function() {
 
     class = "site-page entry-page",
 
+    # Loading spinners on this page's plots while they compute.
+    `data-shiny-busy-spinners` = NA,
+
 
     # Hidden reactive output used to switch
     # between spatial and standard entries.

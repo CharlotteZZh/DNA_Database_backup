@@ -479,3 +479,55 @@ body { background: #f3f6f0; }
 @media (prefers-reduced-motion: reduce) {
   .about-orbit, .about-art-glow, .about-page .hero-section::after { animation: none !important; }
 }
+
+/* Entry page loading: spinners on plots (via data-shiny-busy-spinners)
+   and a thin progress bar while the server is working. */
+.entry-page {
+  --shiny-spinner-color: #214c3e;
+  --shiny-spinner-delay: 0.3s;
+}
+html.shiny-busy .entry-page::before {
+  content: ""; position: fixed; top: 0; left: 0; height: 3px; z-index: 9999;
+  background: linear-gradient(90deg, transparent, #8dd8cd, #d7f6ac, #214c3e, transparent);
+  opacity: 0;
+  animation: entry-busy-fade .25s ease .3s forwards, entry-busy-pulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes entry-busy-fade { to { opacity: 1; } }
+@keyframes entry-busy-pulse {
+  0% { left: -14%; right: 97%; }
+  45% { left: 0%; right: 14%; }
+  55% { left: 14%; right: 0%; }
+  to { left: 97%; right: -14%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.shiny-busy .entry-page::before {
+    left: 0; right: 0; animation: entry-busy-fade .25s ease .3s forwards;
+  }
+}
+
+/* Datasets page: overlay shown from an entry click until its page opens. */
+#entry-opening-overlay {
+  position: fixed; inset: 0; z-index: 10000; display: none;
+  align-items: center; justify-content: center; padding: 16px;
+  background: #0f2a2466;
+}
+#entry-opening-overlay.is-visible {
+  display: flex; opacity: 0; animation: entry-busy-fade .2s ease .15s forwards;
+}
+.entry-opening-card {
+  display: flex; align-items: center; gap: 16px; max-width: 420px;
+  padding: 20px 26px; border-radius: 14px; background: #fbfdf8;
+  border: 1px solid #d1deca; box-shadow: 0 18px 42px -18px #163d3780;
+  color: #1f3b30; font-size: 16px;
+}
+.entry-opening-card strong { display: block; font-weight: 600; }
+.entry-opening-name { display: block; font-size: 14px; color: #5b7263; word-break: break-word; }
+.entry-opening-spinner {
+  flex: 0 0 34px; width: 34px; height: 34px; border-radius: 50%;
+  border: 3px solid #d7e6cf; border-top-color: #214c3e;
+  animation: entry-opening-spin .8s linear infinite;
+}
+@keyframes entry-opening-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .entry-opening-spinner { animation-duration: 2.4s; }
+}
