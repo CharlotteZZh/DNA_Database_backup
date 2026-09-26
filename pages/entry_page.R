@@ -141,6 +141,44 @@ get_spatial_hf_base <- function(sample) {
 
 
 # ============================================================
+# HELPER: FEATURE IDS IN A SPATIAL INDEX
+# ============================================================
+
+# Embryo indexes list VMRs (index$vmr); pancreas indexes
+# list CpGs (index$cpg).
+
+get_spatial_index_features <- function(index) {
+
+  if ("vmr" %in% names(index)) {
+    return(index$vmr)
+  }
+
+  if ("cpg" %in% names(index)) {
+    return(index$cpg)
+  }
+
+  stop(
+    "Spatial index has neither a 'vmr' nor a 'cpg' column."
+  )
+}
+
+
+# ============================================================
+# HELPER: IS THIS THE MOUSE PANCREAS SPATIAL ENTRY?
+# ============================================================
+
+is_pancreas_spatial_entry <- function(entry) {
+
+  is_spatial_entry_data(entry) &&
+    length(get_spatial_samples(entry)) > 0 &&
+    all(
+      get_spatial_samples(entry) %in%
+        SPATIAL_PANCREAS_SAMPLES
+    )
+}
+
+
+# ============================================================
 # DETERMINE WHETHER ENTRY IS SPATIAL
 # ============================================================
 
@@ -524,7 +562,7 @@ get_spatial_feature <- function(
   )
 
   hit <- index[
-    index$vmr == feature,
+    get_spatial_index_features(index) == feature,
     ,
     drop = FALSE
   ]
@@ -564,6 +602,10 @@ get_spatial_feature <- function(
     drop = TRUE
   ]
 
+  value_spots <- colnames(
+    chunk[[source]]
+  )
+
   values <- as.numeric(
     values
   )
@@ -571,6 +613,52 @@ get_spatial_feature <- function(
   metadata <- read_spatial_metadata(
     sample
   )
+
+  # Pancreas: match predictions to spots by
+  # name, keeping only spots with a value.
+  # Prediction columns are named like
+  # metadata$spot_id ("<sample>:<barcode>").
+
+  spot_key <- intersect(
+    c("spot_id", "spot"),
+    names(metadata)
+  )[1]
+
+  if (
+    sample %in% SPATIAL_PANCREAS_SAMPLES &&
+    !is.null(value_spots) &&
+    !is.na(spot_key)
+  ) {
+
+    spot_match <- match(
+      as.character(metadata[[spot_key]]),
+      value_spots
+    )
+
+    if (
+      all(is.na(spot_match))
+    ) {
+
+      stop(
+        paste(
+          "No spatial spots matched the DNAm values for",
+          sample
+        )
+      )
+    }
+
+    metadata <- metadata[
+      !is.na(spot_match),
+      ,
+      drop = FALSE
+    ]
+
+    metadata$value <- values[
+      spot_match[!is.na(spot_match)]
+    ]
+
+    return(metadata)
+  }
 
   if (
     length(values) != nrow(metadata)
@@ -1035,6 +1123,10 @@ entry_ui <- function() {
 
             uiOutput(
               "track_download"
+            ),
+
+            uiOutput(
+              "full_dataset_download"
             )
           )
         ),
@@ -1840,7 +1932,9 @@ entry_server <- function(
             )
 
           unique(
-            index$vmr
+            get_spatial_index_features(
+              index
+            )
           )
         }
       )
@@ -2467,6 +2561,15 @@ entry_server <- function(
     )
 
 
+    # Hide unavailable downloads for pancreas.
+    if (
+      is_pancreas_spatial_entry(current_entry()) &&
+      (is.na(href) || href == "")
+    ) {
+      return(NULL)
+    }
+
+
     make_download_button(
 
       href,
@@ -2490,6 +2593,15 @@ entry_server <- function(
     )
 
 
+    # Hide unavailable downloads for pancreas.
+    if (
+      is_pancreas_spatial_entry(current_entry()) &&
+      (is.na(href) || href == "")
+    ) {
+      return(NULL)
+    }
+
+
     make_download_button(
 
       href,
@@ -2509,6 +2621,15 @@ entry_server <- function(
 
       ""
     )
+
+
+    # Hide unavailable downloads for pancreas.
+    if (
+      is_pancreas_spatial_entry(current_entry()) &&
+      (is.na(href) || href == "")
+    ) {
+      return(NULL)
+    }
 
 
     make_download_button(
@@ -2532,6 +2653,15 @@ entry_server <- function(
     )
 
 
+    # Hide unavailable downloads for pancreas.
+    if (
+      is_pancreas_spatial_entry(current_entry()) &&
+      (is.na(href) || href == "")
+    ) {
+      return(NULL)
+    }
+
+
     make_download_button(
 
       href,
@@ -2539,5 +2669,99 @@ entry_server <- function(
       "Download DNAm Tracks"
     )
   })
+
+
+  # ==========================================================
+  # FULL-DATASET DOWNLOADS
+  # ==========================================================
+
+  output$full_dataset_download <- renderUI({
+
+    entry <- current_entry()
+
+    req(entry)
+
+    has_full_download <- any(
+      vapply(
+        FULL_DOWNLOAD_COLUMNS,
+        function(column) {
+          is_valid_download_link(
+            safe_metadata_value(entry, column, "")
+          )
+        },
+        logical(1)
+      )
+    )
+
+    if (!has_full_download) {
+      return(NULL)
+    }
+
+    # Name the full dataset this entry belongs to.
+    datasets <- get_full_datasets()
+
+    key <- paste(
+      vapply(
+        FULL_DOWNLOAD_COLUMNS,
+        function(column) {
+          as.character(safe_metadata_value(entry, column, ""))
+        },
+        character(1)
+      ),
+      collapse = "|"
+    )
+
+    match_row <- datasets[datasets$key == key, , drop = FALSE]
+
+    title <- if (nrow(match_row) == 1) {
+      paste0(
+        "Full dataset: ",
+        match_row$label,
+        if (match_row$n_entries > 1) {
+          paste0(" (all ", match_row$n_entries, " entries)")
+        } else {
+          ""
+        }
+      )
+    } else {
+      "Full dataset"
+    }
+
+    div(
+
+      style = "
+        margin-top:24px;
+        padding-top:18px;
+        border-top:1px solid #e0e8da;
+      ",
+
+      h4(
+        style = "
+          font-size:16px;
+          font-weight:600;
+          margin-bottom:12px;
+        ",
+        title
+      ),
+
+      actionButton(
+        "go_full_downloads",
+        "View on Full Dataset Downloads",
+        class = "btn btn-outline-primary btn-sm"
+      )
+    )
+  })
+
+
+  observeEvent(
+    input$go_full_downloads,
+    {
+      updateNavbarPage(
+        session,
+        "main_navbar",
+        selected = "Full Datasets"
+      )
+    }
+  )
 
 }

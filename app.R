@@ -7,6 +7,7 @@ source("pages/entry_page.R")
 source("pages/pca_page.R")
 source("pages/models_page.R")
 source("pages/news_page.R")
+source("pages/full_downloads_page.R")
 
 ui <- navbarPage(
 
@@ -50,6 +51,12 @@ ui <- navbarPage(
   tabPanel(
     "Datasets",
     explore_ui()
+  ),
+
+  # Full-dataset downloads
+  tabPanel(
+    "Full Datasets",
+    full_downloads_ui()
   ),
 
   # Hidden entry page
