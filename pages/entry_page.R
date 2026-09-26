@@ -9,11 +9,39 @@ library(plotly)
 SPATIAL_HF_BASE <-
   "https://huggingface.co/datasets/dreamland4dnam/spatial/resolve/main"
 
+SPATIAL_PANCREAS_HF_BASE <-
+  "https://huggingface.co/datasets/dreamland4dnam/pancreas_spatial/resolve/main"
+
+
 SPATIAL_EMBRYO_SAMPLES <- c(
   "E11",
   "E13",
   "E11_facial",
   "P21"
+)
+
+
+SPATIAL_PANCREAS_SAMPLES <- c(
+  "A29_M_P_K4_D2",
+  "A31_M_P_K4_D4",
+  "A34_M_P_K4_D2",
+  "A46_F_P_K4_D4",
+  "A47_F_P_K4_D7",
+  "A53_F_LM_D2",
+  "A60_M_WT_LM_D2",
+  "A66_M_P_K4_D7",
+  "A72_F_LM_D7",
+  "A73_F_LM_D4",
+  "D2FC1",
+  "D2FP1",
+  "D2MC1",
+  "D2MP1",
+  "D4FC3",
+  "D4FP4",
+  "D4MC4",
+  "D7FC6",
+  "D7FP6",
+  "D7MC6"
 )
 
 
@@ -29,9 +57,9 @@ spatial_cache <- new.env(parent = emptyenv())
 # ============================================================
 
 safe_metadata_value <- function(
-    entry,
-    column,
-    default = NA_character_
+  entry,
+  column,
+  default = NA_character_
 ) {
 
   if (!column %in% names(entry)) {
@@ -57,9 +85,9 @@ safe_metadata_value <- function(
 # ============================================================
 
 make_download_button <- function(
-    href,
-    label,
-    primary = FALSE
+  href,
+  label,
+  primary = FALSE
 ) {
 
   valid <- !is.null(href) &&
@@ -87,17 +115,28 @@ make_download_button <- function(
   tags$a(
     href = href,
     target = "_blank",
-
     class = if (primary) {
       "btn btn-primary"
     } else {
       "btn btn-secondary"
     },
-
     style = "width:100%;",
-
     label
   )
+}
+
+
+# ============================================================
+# HELPER: DETERMINE HF BACKEND
+# ============================================================
+
+get_spatial_hf_base <- function(sample) {
+
+  if (sample %in% SPATIAL_PANCREAS_SAMPLES) {
+    return(SPATIAL_PANCREAS_HF_BASE)
+  }
+
+  SPATIAL_HF_BASE
 }
 
 
@@ -187,9 +226,7 @@ get_spatial_samples <- function(entry) {
     )
   )
 
-  # Mouse embryo = one database entry
-  # containing four spatial samples/slides.
-
+  # Mouse embryo
   if (
     grepl("embryo", tissue) ||
     grepl("embryo", entry_name)
@@ -200,9 +237,16 @@ get_spatial_samples <- function(entry) {
     )
   }
 
-  # Mouse pancreas will be added here once
-  # its processed data are connected to the
-  # same Hugging Face structure.
+  # Mouse pancreas
+  if (
+    grepl("pancreas", tissue) ||
+    grepl("pancreas", entry_name)
+  ) {
+
+    return(
+      SPATIAL_PANCREAS_SAMPLES
+    )
+  }
 
   character(0)
 }
@@ -235,7 +279,7 @@ read_spatial_index <- function(sample) {
   }
 
   hf_url <- paste0(
-    SPATIAL_HF_BASE,
+    get_spatial_hf_base(sample),
     "/",
     sample,
     "/vmr_index.tsv.gz"
@@ -318,7 +362,7 @@ read_spatial_metadata <- function(sample) {
   }
 
   hf_url <- paste0(
-    SPATIAL_HF_BASE,
+    get_spatial_hf_base(sample),
     "/",
     sample,
     "/metadata.tsv.gz"
@@ -379,8 +423,8 @@ read_spatial_metadata <- function(sample) {
 # ============================================================
 
 read_spatial_chunk <- function(
-    sample,
-    chunk_number
+  sample,
+  chunk_number
 ) {
 
   cache_name <- paste0(
@@ -411,7 +455,7 @@ read_spatial_chunk <- function(
   )
 
   hf_url <- paste0(
-    SPATIAL_HF_BASE,
+    get_spatial_hf_base(sample),
     "/",
     sample,
     "/",
@@ -470,9 +514,9 @@ read_spatial_chunk <- function(
 # ============================================================
 
 get_spatial_feature <- function(
-    sample,
-    feature,
-    source = "predicted"
+  sample,
+  feature,
+  source = "predicted"
 ) {
 
   index <- read_spatial_index(
@@ -501,6 +545,18 @@ get_spatial_feature <- function(
     as.integer(
       hit$index_in_chunk[1]
     )
+
+  if (!source %in% names(chunk)) {
+
+    stop(
+      paste(
+        "Source",
+        source,
+        "is not available for",
+        sample
+      )
+    )
+  }
 
   values <- chunk[[source]][
     feature_index,
@@ -534,18 +590,20 @@ get_spatial_feature <- function(
   metadata
 }
 
+
 # ============================================================
 # GET SHARED COLOR SCALE FOR ONE VMR
 # ============================================================
 
 get_spatial_color_range <- function(
-    feature,
-    source
+  feature,
+  source,
+  samples
 ) {
 
   all_values <- lapply(
 
-    SPATIAL_EMBRYO_SAMPLES,
+    samples,
 
     function(sample) {
 
@@ -637,16 +695,15 @@ get_spatial_color_range <- function(
 }
 
 
-
 # ============================================================
 # BUILD SPATIAL PLOT
 # ============================================================
 
 build_spatial_plot <- function(
-    sample,
-    feature,
-    source,
-    color_range = NULL
+  sample,
+  feature,
+  source,
+  color_range = NULL
 ) {
 
   dat <- get_spatial_feature(
@@ -678,7 +735,7 @@ build_spatial_plot <- function(
             list(
 
               text = paste(
-                "This VMR is not available in",
+                "This CpG is not available in",
                 sample
               ),
 
@@ -708,10 +765,19 @@ build_spatial_plot <- function(
     is.null(color_range)
   ) {
 
+    samples_for_range <- if (
+      sample %in% SPATIAL_PANCREAS_SAMPLES
+    ) {
+      SPATIAL_PANCREAS_SAMPLES
+    } else {
+      SPATIAL_EMBRYO_SAMPLES
+    }
+
     color_range <-
       get_spatial_color_range(
         feature = feature,
-        source = source
+        source = source,
+        samples = samples_for_range
       )
   }
 
@@ -773,9 +839,8 @@ build_spatial_plot <- function(
 
       colorscale = "Viridis",
 
-      # IMPORTANT:
-      # Every slide gets the SAME feature-specific
-      # color scale.
+      # Every slide for the selected feature
+      # uses the same color scale.
 
       cmin = color_range[1],
 
@@ -800,7 +865,9 @@ build_spatial_plot <- function(
     layout(
 
       title = list(
+
         text = sample,
+
         x = 0
       ),
 
@@ -857,6 +924,7 @@ build_spatial_plot <- function(
 entry_ui <- function() {
 
   fluidPage(
+
     class = "site-page entry-page",
 
 
@@ -864,6 +932,7 @@ entry_ui <- function() {
     # between spatial and standard entries.
 
     tags$span(
+
       style = "display:none;",
 
       textOutput(
@@ -873,6 +942,7 @@ entry_ui <- function() {
 
 
     div(
+
       style = "
         max-width:1600px;
         margin:auto;
@@ -881,14 +951,17 @@ entry_ui <- function() {
 
       fluidRow(
 
+
         # ======================================================
         # LEFT COLUMN
         # ======================================================
 
         column(
+
           4,
 
           div(
+
             class = "feature-card",
 
             uiOutput(
@@ -899,6 +972,7 @@ entry_ui <- function() {
           br(),
 
           div(
+
             class = "feature-card",
 
             h2(
@@ -906,6 +980,7 @@ entry_ui <- function() {
             ),
 
             p(
+
               style = "
                 font-size:16px;
                 line-height:1.7;
@@ -922,9 +997,11 @@ entry_ui <- function() {
           br(),
 
           div(
+
             class = "feature-card",
 
             h2(
+
               style = "
                 font-size:24px;
                 font-weight:600;
@@ -968,6 +1045,7 @@ entry_ui <- function() {
         # ======================================================
 
         column(
+
           8,
 
 
@@ -982,9 +1060,11 @@ entry_ui <- function() {
 
 
             div(
+
               class = "feature-card",
 
               h2(
+
                 "Spatial DNA Methylation",
 
                 style = "
@@ -995,30 +1075,24 @@ entry_ui <- function() {
               ),
 
               p(
+
                 style = "
                   font-size:16px;
                   line-height:1.6;
                   color:#64748B;
                 ",
 
-                "Select a methylation feature to visualize its spatial distribution across samples."
+                "Select a CpG to visualize its spatial DNA methylation distribution across samples."
               ),
 
               br(),
 
 
-              # IMPORTANT:
-              #
-              # This input is STATIC.
-              #
-              # It is not created inside renderUI().
-              # This makes server-side selectize reliable.
-
               selectizeInput(
 
                 "spatial_feature",
 
-                "Select VMR",
+                "Select CpG",
 
                 choices = NULL,
 
@@ -1027,7 +1101,7 @@ entry_ui <- function() {
                 options = list(
 
                   placeholder =
-                    "Search for a VMR...",
+                    "Search for a CpG...",
 
                   maxOptions = 50,
 
@@ -1035,26 +1109,8 @@ entry_ui <- function() {
                 )
               ),
 
-
-              radioButtons(
-
-                "spatial_source",
-
-                "Methylation",
-
-                choices = c(
-
-                  "Predicted DNAm" =
-                    "predicted",
-
-                  "Measured DNAm" =
-                    "observed"
-                ),
-
-                selected =
-                  "predicted",
-
-                inline = TRUE
+              uiOutput(
+                "spatial_source_ui"
               )
             ),
 
@@ -1063,9 +1119,11 @@ entry_ui <- function() {
 
 
             div(
+
               class = "feature-card",
 
               h3(
+
                 "Spatial distribution",
 
                 style = "
@@ -1093,6 +1151,7 @@ entry_ui <- function() {
 
 
             div(
+
               class = "feature-card",
 
               h2(
@@ -1108,6 +1167,7 @@ entry_ui <- function() {
 
 
             div(
+
               class = "feature-card",
 
               h2(
@@ -1131,10 +1191,10 @@ entry_ui <- function() {
 # ============================================================
 
 entry_server <- function(
-    input,
-    output,
-    session,
-    selected_entry
+  input,
+  output,
+  session,
+  selected_entry
 ) {
 
 
@@ -1258,11 +1318,13 @@ entry_server <- function(
 
     div(
 
+
       # ======================================================
       # TITLE
       # ======================================================
 
       h2(
+
         style = "
           font-size:38px;
           font-weight:800;
@@ -1272,6 +1334,7 @@ entry_server <- function(
         ",
 
         tools::toTitleCase(
+
           gsub(
             "_",
             " ",
@@ -1282,6 +1345,7 @@ entry_server <- function(
 
 
       p(
+
         style = "
           font-size:16px;
           color:#64748B;
@@ -1297,6 +1361,7 @@ entry_server <- function(
 
 
       p(
+
         style = "
           font-size:14px;
           color:#94A3B8;
@@ -1316,6 +1381,7 @@ entry_server <- function(
       # ======================================================
 
       div(
+
         style = "
           display:inline-block;
           padding:8px 16px;
@@ -1340,6 +1406,7 @@ entry_server <- function(
       # ======================================================
 
       div(
+
         class = "mini-meta-card",
 
         h4(
@@ -1347,12 +1414,14 @@ entry_server <- function(
         ),
 
         div(
+
           class = "meta-grid",
 
 
           # Tissue
 
           div(
+
             class = "meta-stat",
 
             h5(
@@ -1360,7 +1429,9 @@ entry_server <- function(
             ),
 
             p(
+
               tools::toTitleCase(
+
                 gsub(
                   "_",
                   " ",
@@ -1374,6 +1445,7 @@ entry_server <- function(
           # Samples
 
           div(
+
             class = "meta-stat",
 
             h5(
@@ -1381,11 +1453,15 @@ entry_server <- function(
             ),
 
             p(
+
               if (
                 is.na(n_samples)
               ) {
+
                 "N/A"
+
               } else {
+
                 format(
                   n_samples,
                   big.mark = ","
@@ -1398,9 +1474,11 @@ entry_server <- function(
           # Spatial feature type
 
           div(
+
             class = "meta-stat",
 
             h5(
+
               if (spatial) {
                 "Feature Type"
               } else {
@@ -1434,9 +1512,11 @@ entry_server <- function(
           # Analysis
 
           div(
+
             class = "meta-stat",
 
             h5(
+
               if (spatial) {
                 "Analysis"
               } else {
@@ -1489,6 +1569,7 @@ entry_server <- function(
       # ======================================================
 
       div(
+
         class = "mini-meta-card",
 
         h4(
@@ -1496,10 +1577,12 @@ entry_server <- function(
         ),
 
         div(
+
           class = "meta-grid",
 
 
           div(
+
             class = "meta-stat",
 
             h5(
@@ -1526,9 +1609,11 @@ entry_server <- function(
 
 
           div(
+
             class = "meta-stat",
 
             h5(
+
               if (spatial) {
                 "Feature Type"
               } else {
@@ -1551,6 +1636,7 @@ entry_server <- function(
 
 
           div(
+
             class = "meta-stat",
 
             h5(
@@ -1564,6 +1650,7 @@ entry_server <- function(
 
 
           div(
+
             class = "meta-stat",
 
             h5(
@@ -1590,26 +1677,107 @@ entry_server <- function(
       is_spatial_entry()
     ) {
 
-      paste(
+      entry <- current_entry()
 
-        "This spatial entry contains spatially resolved DNA methylation measurements and Ramp-predicted DNA methylation.",
-
-        "Select a methylation feature to visualize its spatial distribution across the available spatial samples.",
-
-        "Spatial RNA expression is not displayed in this visualization."
+      tissue <- tolower(
+        safe_metadata_value(
+          entry,
+          "tissue",
+          ""
+        )
       )
+
+      if (
+        grepl(
+          "pancreas",
+          tissue
+        )
+      ) {
+
+        paste(
+          "This spatial entry contains Ramp-predicted DNA methylation across 20 mouse pancreas Visium slides.",
+          "Select a CpG to visualize its predicted DNAm spatial distribution across the slides.",
+          "Spatial RNA expression is not displayed in this visualization."
+        )
+
+      } else {
+
+        paste(
+          "This spatial entry contains spatially resolved DNA methylation measurements and Ramp-predicted DNA methylation.",
+          "Select a methylation feature to visualize its spatial distribution across the available spatial samples.",
+          "Spatial RNA expression is not displayed in this visualization."
+        )
+      }
 
     } else {
 
       paste(
-
         "This entry represents a tissue- or cohort-specific subset of the",
-
         current_entry()$dataset[1],
-
         "dataset. Interactive PCA and UMAP embeddings are computed at the full dataset level to preserve global biological structure and enable cross-tissue or cross-cohort comparisons."
       )
     }
+  })
+
+
+  # ==========================================================
+  # SPATIAL SOURCE UI
+  # ==========================================================
+
+  output$spatial_source_ui <- renderUI({
+
+    req(
+      is_spatial_entry()
+    )
+
+    samples <- get_spatial_samples(
+      current_entry()
+    )
+
+    # Pancreas only has predicted DNAm.
+    if (
+      length(samples) > 0 &&
+      all(
+        samples %in%
+          SPATIAL_PANCREAS_SAMPLES
+      )
+    ) {
+
+      return(
+
+        radioButtons(
+
+          "spatial_source",
+
+          "Methylation",
+
+          choices = c(
+            "Predicted DNAm" = "predicted"
+          ),
+
+          selected = "predicted",
+
+          inline = TRUE
+        )
+      )
+    }
+
+    # Existing embryo behavior.
+    radioButtons(
+
+      "spatial_source",
+
+      "Methylation",
+
+      choices = c(
+        "Predicted DNAm" = "predicted",
+        "Measured DNAm" = "observed"
+      ),
+
+      selected = "predicted",
+
+      inline = TRUE
+    )
   })
 
 
@@ -1657,7 +1825,7 @@ entry_server <- function(
 
 
       # ------------------------------------------------------
-      # Get VMRs from each slide
+      # Get CpGs from each slide
       # ------------------------------------------------------
 
       feature_lists <- lapply(
@@ -1679,7 +1847,7 @@ entry_server <- function(
 
 
       # ------------------------------------------------------
-      # Keep ONLY VMRs present in every slide
+      # Keep ONLY CpGs present in every slide
       # ------------------------------------------------------
 
       common_vmrs <- Reduce(
@@ -1697,9 +1865,6 @@ entry_server <- function(
 
       # ------------------------------------------------------
       # Server-side selectize
-      #
-      # The VMRs remain on the server instead of being
-      # rendered as 75k–100k browser options.
       # ------------------------------------------------------
 
       updateSelectizeInput(
@@ -1720,12 +1885,13 @@ entry_server <- function(
         options = list(
 
           placeholder =
-            "Search for a VMR...",
+            "Search for a CpG...",
 
           maxOptions =
             50
         )
       )
+
     },
 
     ignoreInit = FALSE
@@ -1741,7 +1907,6 @@ entry_server <- function(
     req(
       is_spatial_entry()
     )
-
 
     feature <-
       input$spatial_feature
@@ -1768,69 +1933,54 @@ entry_server <- function(
             font-size:16px;
           ",
 
-          "Search for and select a VMR above to view its spatial distribution."
+          "Search for and select a CpG above to view its spatial distribution."
         )
       )
     }
 
 
+    samples <- get_spatial_samples(
+      current_entry()
+    )
+
+
+    req(
+      length(samples) > 0
+    )
+
+
     # --------------------------------------------------------
-    # Four slides
+    # Create two-column rows dynamically
     # --------------------------------------------------------
 
-    tagList(
+    rows <- lapply(
 
-      fluidRow(
-
-        column(
-          6,
-
-          h4(
-            "E11",
-
-            style = "
-              font-weight:700;
-              margin-bottom:10px;
-            "
-          ),
-
-          plotlyOutput(
-            "spatial_E11",
-            height = "450px"
-          )
-        ),
-
-
-        column(
-          6,
-
-          h4(
-            "E13",
-
-            style = "
-              font-weight:700;
-              margin-bottom:10px;
-            "
-          ),
-
-          plotlyOutput(
-            "spatial_E13",
-            height = "450px"
-          )
-        )
+      seq(
+        1,
+        length(samples),
+        by = 2
       ),
 
+      function(i) {
 
-      br(),
+        sample1 <- samples[i]
+
+        sample2 <- if (
+          i + 1 <= length(samples)
+        ) {
+          samples[i + 1]
+        } else {
+          NULL
+        }
 
 
-      fluidRow(
+        left_column <- column(
 
-        column(
           6,
 
           h4(
-            "E11 Facial",
+
+            sample1,
 
             style = "
               font-weight:700;
@@ -1839,103 +1989,160 @@ entry_server <- function(
           ),
 
           plotlyOutput(
-            "spatial_E11_facial",
-            height = "450px"
-          )
-        ),
 
+            paste0(
+              "spatial_",
+              sample1
+            ),
 
-        column(
-          6,
-
-          h4(
-            "P21",
-
-            style = "
-              font-weight:700;
-              margin-bottom:10px;
-            "
-          ),
-
-          plotlyOutput(
-            "spatial_P21",
             height = "450px"
           )
         )
-      )
+
+
+        if (!is.null(sample2)) {
+
+          right_column <- column(
+
+            6,
+
+            h4(
+
+              sample2,
+
+              style = "
+                font-weight:700;
+                margin-bottom:10px;
+              "
+            ),
+
+            plotlyOutput(
+
+              paste0(
+                "spatial_",
+                sample2
+              ),
+
+              height = "450px"
+            )
+          )
+
+        } else {
+
+          right_column <- NULL
+        }
+
+
+        fluidRow(
+
+          left_column,
+
+          right_column
+        )
+      }
+    )
+
+
+    do.call(
+      tagList,
+      rows
     )
   })
 
 
   # ============================================================
-# SPATIAL PLOTS
-# ============================================================
+  # SPATIAL PLOTS
+  # ============================================================
 
-for (
-  sample in SPATIAL_EMBRYO_SAMPLES
-) {
+  observe({
 
-  local({
-
-    this_sample <- sample
-
-    output[[
-      paste0(
-        "spatial_",
-        this_sample
-      )
-    ]] <- renderPlotly({
-
-      req(
-        is_spatial_entry()
-      )
-
-      req(
-        input$spatial_feature
-      )
-
-      req(
-        input$spatial_feature != ""
-      )
-
-      req(
-        input$spatial_source
-      )
+    req(
+      is_spatial_entry()
+    )
 
 
-      # ------------------------------------------------------
-      # Calculate ONE color scale for the selected VMR
-      # across ALL FOUR embryo slides.
-      # ------------------------------------------------------
+    samples <- get_spatial_samples(
+      current_entry()
+    )
 
-      color_range <-
-        get_spatial_color_range(
 
-          feature =
-            input$spatial_feature,
+    req(
+      length(samples) > 0
+    )
 
-          source =
+
+    for (sample in samples) {
+
+      local({
+
+        this_sample <- sample
+
+
+        output[[
+          paste0(
+            "spatial_",
+            this_sample
+          )
+        ]] <- renderPlotly({
+
+          req(
+            is_spatial_entry()
+          )
+
+          req(
+            input$spatial_feature
+          )
+
+          req(
+            input$spatial_feature != ""
+          )
+
+          req(
             input$spatial_source
-        )
+          )
 
 
-      build_spatial_plot(
+          current_samples <-
+            get_spatial_samples(
+              current_entry()
+            )
 
-        sample =
-          this_sample,
 
-        feature =
-          input$spatial_feature,
+          # One shared color scale for the
+          # selected CpG across all slides.
 
-        source =
-          input$spatial_source,
+          color_range <-
+            get_spatial_color_range(
 
-        color_range =
-          color_range
-      )
-    })
+              feature =
+                input$spatial_feature,
+
+              source =
+                input$spatial_source,
+
+              samples =
+                current_samples
+            )
+
+
+          build_spatial_plot(
+
+            sample =
+              this_sample,
+
+            feature =
+              input$spatial_feature,
+
+            source =
+              input$spatial_source,
+
+            color_range =
+              color_range
+          )
+        })
+      })
+    }
   })
-}
 
 
   # ==========================================================
@@ -1995,11 +2202,12 @@ for (
           "plot_path" %in%
             names(current_entry()) &&
 
-          !is.na(
-            current_entry()$plot_path[1]
-          ) &&
+            !is.na(
+              current_entry()$plot_path[1]
+            ) &&
 
-          current_entry()$plot_path[1] != ""
+            current_entry()$plot_path[1] != ""
+
         ) {
 
           tags$iframe(
@@ -2089,11 +2297,12 @@ for (
           "umap_path" %in%
             names(current_entry()) &&
 
-          !is.na(
-            current_entry()$umap_path[1]
-          ) &&
+            !is.na(
+              current_entry()$umap_path[1]
+            ) &&
 
-          current_entry()$umap_path[1] != ""
+            current_entry()$umap_path[1] != ""
+
         ) {
 
           tags$iframe(
@@ -2249,14 +2458,21 @@ for (
   output$prediction_download <- renderUI({
 
     href <- safe_metadata_value(
+
       current_entry(),
+
       "predicted_download_tissue",
+
       ""
     )
 
+
     make_download_button(
+
       href,
+
       "Download Predicted DNAm",
+
       primary = TRUE
     )
   })
@@ -2265,13 +2481,19 @@ for (
   output$source_download <- renderUI({
 
     href <- safe_metadata_value(
+
       current_entry(),
+
       "goldstandard_download_tissue",
+
       ""
     )
 
+
     make_download_button(
+
       href,
+
       "Download Gold-standard DNAm"
     )
   })
@@ -2280,13 +2502,19 @@ for (
   output$rna_download <- renderUI({
 
     href <- safe_metadata_value(
+
       current_entry(),
+
       "input_download_tissue",
+
       ""
     )
 
+
     make_download_button(
+
       href,
+
       "Download Input RNA"
     )
   })
@@ -2295,14 +2523,21 @@ for (
   output$track_download <- renderUI({
 
     href <- safe_metadata_value(
+
       current_entry(),
+
       "track_download_tissue",
+
       ""
     )
 
+
     make_download_button(
+
       href,
+
       "Download DNAm Tracks"
     )
   })
+
 }
