@@ -16,7 +16,7 @@ news_ui <- function() {
             font-size:56px;
             font-weight:900;
             margin-bottom:20px;
-            background: linear-gradient(90deg, #0F766E, #2563EB);
+            background: linear-gradient(90deg, #0F5B76, #2563EB);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
           ",

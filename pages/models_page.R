@@ -16,7 +16,7 @@ models_ui <- function() {
             font-size:56px;
             font-weight:900;
             margin-bottom:20px;
-            background: linear-gradient(90deg, #7C3AED, #2563EB);
+            background: linear-gradient(90deg, #3A5EED, #2563EB);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
           ",
@@ -47,7 +47,7 @@ models_ui <- function() {
           div(
             class = "feature-card model-card model-dreamland",
             style = "
-              border-top: 8px solid #8B5CF6;
+              border-top: 8px solid #5C7BF6;
               min-height:650px;
             ",
             
@@ -56,8 +56,8 @@ models_ui <- function() {
             div(
               style="
                 display:inline-block;
-                background:#F3E8FF;
-                color:#6D28D9;
+                background:#E8EDFF;
+                color:#284BD9;
                 padding:6px 14px;
                 border-radius:999px;
                 font-size:13px;
@@ -75,7 +75,7 @@ models_ui <- function() {
             
             div(
               style="
-                background:#FAF5FF;
+                background:#F5F7FF;
                 padding:18px;
                 border-radius:18px;
               ",
@@ -186,7 +186,7 @@ models_ui <- function() {
           div(
             class = "feature-card model-card model-ramp",
             style = "
-              border-top: 8px solid #F59E0B;
+              border-top: 8px solid #0BA7F5;
               min-height:650px;
             ",
             
@@ -195,8 +195,8 @@ models_ui <- function() {
             div(
               style="
                 display:inline-block;
-                background:#FEF3C7;
-                color:#B45309;
+                background:#C7ECFE;
+                color:#097BB4;
                 padding:6px 14px;
                 border-radius:999px;
                 font-size:13px;
@@ -214,7 +214,7 @@ models_ui <- function() {
             
             div(
               style="
-                background:#FFFBEB;
+                background:#EBF8FF;
                 padding:18px;
                 border-radius:18px;
               ",
@@ -247,7 +247,7 @@ models_ui <- function() {
       div(
         class = "feature-card model-comparison",
         style = "
-          border-left:8px solid #06B6D4;
+          border-left:8px solid #0692D4;
         ",
         
         h2("Model Comparison"),
@@ -319,7 +319,13 @@ models_ui <- function() {
             )
           ),
           tags$li("Model download links"),
-          tags$li("User manuals (coming soon)")
+          tags$li(
+            tags$a(
+              "User manual",
+              href = "#",
+              onclick = "$('#main_navbar a[data-value=\"User Manual\"]').tab('show'); window.scrollTo(0, 0); return false;"
+            )
+          )
         )
       )
     )

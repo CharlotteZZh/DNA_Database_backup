@@ -81,7 +81,7 @@
               const y = h * .5 + (row - 5.5) * h * .047 + Math.sin(i / 80 * 6 + angle + row * .14) * h * .16;
               if (i === 0) context.moveTo(x, y); else context.lineTo(x, y);
             }
-            context.strokeStyle = `rgba(185,239,188,${.15 + row * .035})`;
+            context.strokeStyle = `rgba(70,130,195,${.15 + row * .035})`;
             context.lineWidth = 1; context.stroke();
           }
           return;
@@ -99,12 +99,12 @@
             if (i === 0) context.moveTo(px, py); else context.lineTo(px, py);
             if (i % 8 === 0) nodes.push({ x: px, y: py, z });
           }
-          context.strokeStyle = type === "network" ? "rgba(155,202,179,.22)" : "rgba(188,235,184,.28)";
+          context.strokeStyle = type === "network" ? "rgba(70,120,180,.25)" : "rgba(70,130,195,.3)";
           context.lineWidth = .8; context.stroke();
         }
         nodes.sort((a, b) => a.z - b.z).forEach(p => {
           context.beginPath(); context.arc(p.x, p.y, 1 + (p.z + 1) * .85, 0, Math.PI * 2);
-          context.fillStyle = `rgba(211,247,178,${.25 + (p.z + 1) * .32})`; context.fill();
+          context.fillStyle = `rgba(47,111,179,${.25 + (p.z + 1) * .32})`; context.fill();
         });
       }
       function resizeArt() {
@@ -179,8 +179,8 @@
     function drawNode(p) {
       const opacity = 0.25 + (p.depth + 1) * 0.35;
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${p.strand ? "170,226,225" : "220,250,173"},${opacity})`;
-      ctx.shadowColor = p.strand ? "#a4dfe0" : "#d2f4a2";
+      ctx.fillStyle = `rgba(${p.strand ? "60,125,195" : "110,130,215"},${opacity})`;
+      ctx.shadowColor = p.strand ? "#9cc6ee" : "#b9c8f2";
       ctx.shadowBlur = p.depth > 0.5 ? 12 : 0;
       ctx.fill(); ctx.shadowBlur = 0;
     }
@@ -196,23 +196,23 @@
       const my = p.y + side * Math.sin(tilt) * reach;
       if (level < 0.98) {
         ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(140,216,205,${alpha * (1 - level) * 0.9})`;
+        ctx.strokeStyle = `rgba(70,120,180,${alpha * (1 - level) * 0.9})`;
         ctx.lineWidth = 1.2; ctx.stroke();
       }
       if (level > 0.02) {
         ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mx, my);
-        ctx.strokeStyle = `rgba(246,214,128,${alpha * level * 0.8})`;
+        ctx.strokeStyle = `rgba(214,80,135,${alpha * level * 0.8})`;
         ctx.lineWidth = 1.3; ctx.stroke();
         ctx.beginPath(); ctx.arc(mx, my, (1.8 + level * 2.4) * (0.75 + (p.depth + 1) * 0.2), 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(250,216,120,${alpha * level})`;
-        ctx.shadowColor = "#f7d57a";
+        ctx.fillStyle = `rgba(214,80,135,${alpha * level})`;
+        ctx.shadowColor = "#f2b6cc";
         ctx.shadowBlur = 6 + level * 10;
         ctx.fill(); ctx.shadowBlur = 0;
         if (level > 0.75 && p.depth > 0.35 && width > 320) {
           ctx.font = `600 9px ${font}`;
           ctx.textAlign = side > 0 ? "left" : "right";
           ctx.textBaseline = "middle";
-          ctx.fillStyle = `rgba(250,226,160,${(level - 0.75) * 4 * (p.depth - 0.35) * 1.3})`;
+          ctx.fillStyle = `rgba(20,20,20,${(level - 0.75) * 4 * (p.depth - 0.35) * 1.3})`;
           ctx.fillText("CH₃", mx + side * 7, my);
         }
       }
@@ -224,13 +224,13 @@
       ctx.font = `500 10px ${font}`;
       ctx.textAlign = "left"; ctx.textBaseline = "middle";
       ctx.beginPath(); ctx.arc(x, y - 16, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(250,216,120,.95)"; ctx.shadowColor = "#f7d57a"; ctx.shadowBlur = 8;
+      ctx.fillStyle = "rgba(214,80,135,.95)"; ctx.shadowColor = "#f2b6cc"; ctx.shadowBlur = 8;
       ctx.fill(); ctx.shadowBlur = 0;
-      ctx.fillStyle = "rgba(230,245,205,.72)";
+      ctx.fillStyle = "rgba(17,17,17,.8)";
       ctx.fillText("5mC · methylated CpG", x + 11, y - 16);
       ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(140,216,205,.9)"; ctx.lineWidth = 1.2; ctx.stroke();
-      ctx.fillStyle = "rgba(230,245,205,.72)";
+      ctx.strokeStyle = "rgba(70,120,180,.9)"; ctx.lineWidth = 1.2; ctx.stroke();
+      ctx.fillStyle = "rgba(17,17,17,.8)";
       ctx.fillText("unmethylated CpG", x + 11, y);
     }
 
@@ -243,7 +243,7 @@
         const y = ((i * 73.17) % 100) / 100 * height;
         ctx.beginPath();
         ctx.arc(x, y, i % 5 === 0 ? 2 : 0.8, 0, Math.PI * 2);
-        ctx.fillStyle = i % 5 === 0 ? "rgba(210,246,170,.6)" : "rgba(210,246,170,.22)";
+        ctx.fillStyle = i % 5 === 0 ? "rgba(47,111,179,.45)" : (i % 2 ? "rgba(143,184,234,.4)" : "rgba(111,159,208,.25)");
         ctx.fill();
       }
       // An illustrative methylated helix, not an analytical visualization.
@@ -253,13 +253,13 @@
         const level = site ? methylation(site) : 0;
         const gradient = ctx.createLinearGradient(a.x, a.y, b.x + 0.01, b.y);
         if (site) {
-          gradient.addColorStop(0, `rgba(${Math.round(206 + 40 * level)},${Math.round(247 - 30 * level)},${Math.round(160 - 30 * level)},.8)`);
-          gradient.addColorStop(0.5, `rgba(240,220,150,${0.18 + level * 0.25})`);
-          gradient.addColorStop(1, `rgba(${Math.round(156 + 90 * level)},${Math.round(211 + 4 * level)},${Math.round(225 - 95 * level)},.75)`);
+          gradient.addColorStop(0, `rgba(${Math.round(80 - 33 * level)},${Math.round(140 - 29 * level)},${Math.round(205 - 26 * level)},.8)`);
+          gradient.addColorStop(0.5, `rgba(150,160,210,${0.18 + level * 0.25})`);
+          gradient.addColorStop(1, `rgba(${Math.round(70 - 23 * level)},${Math.round(125 - 14 * level)},${Math.round(195 - 16 * level)},.75)`);
         } else {
-          gradient.addColorStop(0, "rgba(206,247,160,.55)");
-          gradient.addColorStop(0.5, "rgba(160,213,187,.14)");
-          gradient.addColorStop(1, "rgba(156,211,225,.5)");
+          gradient.addColorStop(0, "rgba(90,150,210,.45)");
+          gradient.addColorStop(0.5, "rgba(120,150,200,.14)");
+          gradient.addColorStop(1, "rgba(90,150,210,.4)");
         }
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
         ctx.strokeStyle = gradient; ctx.lineWidth = site ? 2 : 1.4; ctx.stroke();
@@ -271,7 +271,7 @@
           if (i > 0) {
             const previous = point(i - 1, strand);
             ctx.beginPath(); ctx.moveTo(previous.x, previous.y); ctx.lineTo(p.x, p.y);
-            ctx.strokeStyle = `rgba(${strand ? "168,222,221" : "216,249,174"},${0.22 + (p.depth + 1) * 0.24})`;
+            ctx.strokeStyle = `rgba(${strand ? "60,125,195" : "110,130,215"},${0.22 + (p.depth + 1) * 0.24})`;
             ctx.lineWidth = 1.7; ctx.stroke();
           }
           const site = cpgSites.get(i);

@@ -2,12 +2,12 @@ body {
   background:
     linear-gradient(
       180deg,
-      #F8FAFC 0%,
-      #EEF6FF 40%,
-      #F1F5F9 100%
+      #EEF5FC 0%,
+      #E3EFFB 40%,
+      #EAF3FB 100%
     );
   font-family: Inter, sans-serif;
-  color: #0F172A;
+  color: #111111;
 }
 
 /* =========================================
@@ -23,14 +23,14 @@ NAVBAR
 }
 
 .navbar-brand {
-  color: #0F172A !important;
+  color: #ffffff !important;
   font-size: 36px !important;
   font-weight: 900 !important;
   letter-spacing: -1px;
 }
 
 .navbar-nav > li > a {
-  color: #334155 !important;
+  color: #e6effb !important;
   font-size: 18px !important;
   font-weight: 600 !important;
 }
@@ -51,8 +51,8 @@ HERO
   background:
     linear-gradient(
       135deg,
-      rgba(15,118,110,0.95),
-      rgba(8,47,73,0.95)
+      #d3e7f8,
+      #e6f1fb
     );
 
   overflow: hidden;
@@ -77,7 +77,7 @@ HERO
 .hero-section::before {
   width: 240px;
   height: 240px;
-  background: #2DD4BF;
+  background: #bcd9f3;
   top: -80px;
   left: -60px;
   animation: float1 14s infinite ease-in-out;
@@ -86,7 +86,7 @@ HERO
 .hero-section::after {
   width: 180px;
   height: 180px;
-  background: #7DD3FC;
+  background: #b9c8f2;
   bottom: 10px;
   right: 20px;
   animation: float2 16s infinite ease-in-out;
@@ -108,7 +108,7 @@ HERO
   letter-spacing: -2px;
   margin: 0 !important;
   padding: 0 !important;
-  color: white;
+  color: #111111;
   line-height: 1;
 }
 
@@ -118,7 +118,7 @@ HERO
   opacity: 0.95;
   margin: 10px 0 8px 0 !important;
   line-height: 1.15;
-  color: rgba(255,255,255,0.95);
+  color: #1a1a1a;
 }
 
 .hero-text {
@@ -127,7 +127,7 @@ HERO
   max-width: 1350px;
   margin: 0 auto 14px auto !important;
   opacity: 0.90;
-  color: rgba(255,255,255,0.88);
+  color: #3d424a;
 }
 
 /* =========================================
@@ -142,7 +142,7 @@ BUTTON
       #E0F2FE
     ) !important;
 
-  color: #0F172A !important;
+  color: #111111 !important;
   border: none !important;
   border-radius: 999px !important;
   padding: 8px 24px !important;
@@ -196,13 +196,13 @@ FEATURE CARDS
   font-size: 32px;
   font-weight: 800;
   margin-top: 20px;
-  color: #0F172A;
+  color: #111111;
 }
 
 .feature-card p {
   font-size: 18px;
   line-height: 1.8;
-  color: #475569;
+  color: #3d424a;
 }
 
 /* =========================================
@@ -213,11 +213,11 @@ SEARCH BUTTON
   background:
     linear-gradient(
       135deg,
-      #14B8A6,
-      #06B6D4
+      #a9d1f2,
+      #bcdcf5
     ) !important;
 
-  color: white !important;
+  color: #111111 !important;
   border: none !important;
   border-radius: 22px !important;
   padding: 20px 36px !important;
@@ -226,7 +226,7 @@ SEARCH BUTTON
   width: 100% !important;
 
   box-shadow:
-    0 12px 35px rgba(20,184,166,0.18);
+    0 12px 35px rgba(20,142,184,0.18);
 
   transition: all 0.25s ease;
 }
@@ -240,13 +240,13 @@ ENTRY LINKS
 ========================================= */
 
 .entry-link {
-  color: #0F766E !important;
+  color: #2470B3 !important;
   font-weight: 700;
   text-decoration: none !important;
 }
 
 .entry-link:hover {
-  color: #14B8A6 !important;
+  color: #148EB8 !important;
 }
 
 /* =========================================
@@ -255,7 +255,7 @@ TABLES
 
 .dataTables_wrapper {
   font-size: 17px;
-  color: #0F172A;
+  color: #111111;
 }
 
 /* =========================================
@@ -265,7 +265,7 @@ COMING SOON
 .coming-soon-box {
   width: 100%;
   background: rgba(255,255,255,0.75);
-  color: #475569;
+  color: #3d424a;
   padding: 18px;
   border-radius: 20px;
   text-align: center;
@@ -314,7 +314,7 @@ ENTRY METADATA CARDS
 .meta-stat p {
   font-size: 14px;
   font-weight: 600;
-  color: #0F172A;
+  color: #111111;
   margin: 0;
   line-height: 1.25;
 }

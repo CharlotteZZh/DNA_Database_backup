@@ -1481,8 +1481,8 @@ entry_server <- function(
           display:inline-block;
           padding:8px 16px;
           border-radius:999px;
-          background:#F3E8FF;
-          color:#6D28D9;
+          background:#E8EDFF;
+          color:#284BD9;
           font-size:14px;
           font-weight:700;
           margin-bottom:18px;
@@ -2735,7 +2735,7 @@ entry_server <- function(
       style = "
         margin-top:24px;
         padding-top:18px;
-        border-top:1px solid #e0e8da;
+        border-top:1px solid #dae3e8;
       ",
 
       h4(

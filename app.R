@@ -8,6 +8,7 @@ source("pages/pca_page.R")
 source("pages/models_page.R")
 source("pages/news_page.R")
 source("pages/full_downloads_page.R")
+source("pages/manual_page.R")
 
 ui <- navbarPage(
 
@@ -20,7 +21,7 @@ ui <- navbarPage(
 
   theme = bs_theme(
     version = 5,
-    primary = "#0F766E",
+    primary = "#2470B3",
     secondary = "#164E63"
   ),
 
@@ -76,6 +77,32 @@ ui <- navbarPage(
   tabPanel(
     "News",
     news_ui()
+  ),
+
+  # User manual
+  tabPanel(
+    "User Manual",
+    manual_ui()
+  ),
+
+  # Site-wide footer with funding acknowledgment
+  footer = tags$footer(
+    class = "site-footer",
+    tags$a(
+      href = "https://www.nih.gov",
+      target = "_blank",
+      rel = "noopener",
+      class = "site-footer-logo",
+      tags$img(
+        src = "images/nih-logo.svg",
+        alt = "National Institutes of Health"
+      )
+    ),
+    div(
+      class = "site-footer-text",
+      p("Supported by the National Institutes of Health (NIH)."),
+      p(class = "site-footer-name", "MethylProphet DB")
+    )
   )
 )
 
