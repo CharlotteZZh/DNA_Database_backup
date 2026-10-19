@@ -1,0 +1,20 @@
+# Keep the image to what the app needs at runtime
+.git
+.gitignore
+.gitlab-ci.yml
+.claude
+.Rproj.user
+*.Rproj
+CLAUDE.md
+README.md
+Dockerfile
+.dockerignore
+chart
+rsconnect
+dhts-agent-toolkit
+split_gtex.R
+pages/entry_page_backup.R
+# Not referenced by the app or data/metadata.csv
+data/pca
+**/*_OLD.tsv.gz
+**/.DS_Store

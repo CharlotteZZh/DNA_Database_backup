@@ -1,0 +1,60 @@
+# Build, scan and deploy MethylProphet DB to DKSO (OpenShift) using the DHTS CI templates.
+# Requires in GitLab:
+#   - CI/CD variable HELM_TOKEN (from the namespace email)
+#   - Deploy token named gitlab-deploy-token with read_registry
+
+stages:
+  - build
+  - scan
+  - tag
+  - deploy
+  - decom
+
+variables:
+  APPLICATION_NAME: methylprophetdb
+  RELEASE_NAME: methylprophetdb
+  CLUSTER_SERVER: https://api.dksoprod-nc1.dhe.duke.edu:6443
+  CLUSTER_NAMESPACE: inferred-dna-methylation-db
+  # Each commit gets its own image tag so every deploy rolls out the new code
+  THE_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+
+include:
+  - project: 'utility/project-templates/ci-templates'
+    file: '/docker-ci.yml'
+  - project: 'utility/project-templates/ci-templates'
+    file: '/helm-ci.yml'
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build:
+  extends: .kaniko_build
+
+scan:
+  extends: .docker_scan
+
+tag:
+  extends: .registry_image_tag
+  variables:
+    FROM_TAG: $CI_COMMIT_SHORT_SHA
+    TO_TAG: latest
+
+deploy:
+  extends: .helm_deploy
+  environment: production
+  script:
+    - helm upgrade --install $RELEASE_NAME ./chart
+      --namespace $CLUSTER_NAMESPACE
+      --history-max $MAX_HISTORY
+      --set-string image.repository=$CI_REGISTRY_IMAGE
+      --set-string image.tag=$CI_COMMIT_SHORT_SHA
+      --set-string registry.server=$CI_REGISTRY
+      --set-string registry.username=$CI_DEPLOY_USER
+      --set-string registry.password=$CI_DEPLOY_PASSWORD
+      --wait --timeout 10m
+    - kubectl get route $RELEASE_NAME -o jsonpath='{"App URL: https://"}{.spec.host}{"\n"}'
+
+decom:
+  extends: .helm_decom
+  environment: production
