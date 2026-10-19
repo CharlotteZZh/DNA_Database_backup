@@ -53,7 +53,7 @@ deploy:
       --set-string registry.username=$CI_DEPLOY_USER
       --set-string registry.password=$CI_DEPLOY_PASSWORD
       --wait --timeout 10m
-    - kubectl get route $RELEASE_NAME -o jsonpath='{"App URL: https://"}{.spec.host}{"\n"}'
+    - echo "App URL https://$(kubectl get route $RELEASE_NAME -o jsonpath='{.spec.host}')"
 
 decom:
   extends: .helm_decom
