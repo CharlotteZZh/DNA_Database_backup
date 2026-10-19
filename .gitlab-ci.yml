@@ -31,8 +31,34 @@ workflow:
 build:
   extends: .kaniko_build
 
+# CrowdStrike scan from the DHTS template. The script is copied from
+# ci-templates docker-ci.yml (.crowdstrike_scan) because the template's last
+# line is missing a closing brace ("exit ${FCS_EXIT:-0"), which makes every
+# run fail. Drop this override once the template is fixed.
 scan:
-  extends: .docker_scan
+  extends: .crowdstrike_scan
+  script:
+    - if [[ -z ${THE_USER} ]]; then THE_USER=gitlab-ci-token ; fi
+    - if [[ -z ${THE_PASSWORD} ]]; then THE_PASSWORD=$CI_JOB_TOKEN ; fi
+    - echo scanning $THE_IMAGE
+    - mkdir -p ${CI_PROJECT_DIR}/scan_results
+    - WORK_DIR=$(mktemp -d)
+    - export DOCKER_CONFIG=${WORK_DIR}/docker
+    - crane auth login "$CI_REGISTRY" -u "$THE_USER" -p "$THE_PASSWORD" 2>&1 | grep -v -e "^WARNING" -e "credential" -e "docs.docker.com" || true
+    - crane pull --platform linux/amd64 "$THE_IMAGE" ${WORK_DIR}/image.tar
+    - rm -rf "$DOCKER_CONFIG"
+    - fcs scan image ${WORK_DIR}/image.tar
+      --falcon-region "us-1"
+      --upload
+      --minimum-severity $MINIMUM_SEVERITY
+      --platform linux/amd64
+      --format json
+      --output ${CI_PROJECT_DIR}/scan_results/fcs_scan.json
+      || FCS_EXIT=$?
+    - rm -rf "$WORK_DIR"
+    - cat ${CI_PROJECT_DIR}/scan_results/fcs_scan.json
+    - if grep -Eq '"deny"[[:space:]]*:[[:space:]]*true' ${CI_PROJECT_DIR}/scan_results/fcs_scan.json ; then echo "CrowdStrike FCS policy denied image $THE_IMAGE" ; exit 1 ; fi
+    - exit ${FCS_EXIT:-0}
 
 tag:
   extends: .registry_image_tag
