@@ -64,7 +64,8 @@ deploy:
       --set-string registry.server=$CI_REGISTRY
       --set-string registry.username=$CI_DEPLOY_USER
       --set-string registry.password=$CI_DEPLOY_PASSWORD
-      --wait --timeout 10m
+      --wait --timeout 5m
+      || { kubectl logs deployment/$RELEASE_NAME --tail=100; kubectl logs deployment/$RELEASE_NAME --previous --tail=100 || true; kubectl get events --sort-by=.lastTimestamp | tail -30; exit 1; }
     - echo "App URL https://$(kubectl get route $RELEASE_NAME -o jsonpath='{.spec.host}')"
 
 decom:
