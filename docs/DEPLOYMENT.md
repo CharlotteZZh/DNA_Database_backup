@@ -8,7 +8,7 @@ The app runs on the Duke Kubernetes Service (DKSO, Red Hat OpenShift), cluster
 | GitLab project | https://gitlab.dhe.duke.edu/cz280/dreamlanddb |
 | Pipelines | https://gitlab.dhe.duke.edu/cz280/dreamlanddb/-/pipelines |
 | Internal URL (Duke network/VPN only) | https://methylprophetdb-inferred-dna-methylation-db.apps.dksoprod-nc1.dhe.duke.edu |
-| Planned public URL | https://methylprophetdb.duhs.duke.edu |
+| Planned public URL | https://dreamlanddb.duhs.duke.edu |
 | OpenShift console | https://console-openshift-console.apps.dksoprod-nc1.dhe.duke.edu |
 | Namespace admins | jd495, cz280 |
 
@@ -46,8 +46,8 @@ https://duke.service-now.com (search the catalog for the form name).
 
 Form: **Request or Manage Duke Health SSL Certificates**
 
-- Common name: `methylprophetdb.duhs.duke.edu`
-- Purpose: public web application (MethylProphet DB research database), hosted on
+- Common name: `dreamlanddb.duhs.duke.edu`
+- Purpose: public web application (DreamlandDB research database), hosted on
   DKSO `dksoprod-nc1`, namespace `inferred-dna-methylation-db`
 
 If the form asks for a CSR, generate one locally. The `secrets/` folder is ignored by
@@ -56,9 +56,9 @@ git and never leaves your machine:
 ```
 mkdir -p secrets
 openssl req -new -newkey rsa:2048 -nodes \
-  -keyout secrets/methylprophetdb.key \
-  -out secrets/methylprophetdb.csr \
-  -subj "/C=US/ST=North Carolina/L=Durham/O=Duke University/CN=methylprophetdb.duhs.duke.edu"
+  -keyout secrets/dreamlanddb.key \
+  -out secrets/dreamlanddb.csr \
+  -subj "/C=US/ST=North Carolina/L=Durham/O=Duke University/CN=dreamlanddb.duhs.duke.edu"
 ```
 
 When the certificate is issued, download **"Certificate (w/ issuer after), PEM
@@ -72,12 +72,12 @@ Form: **Request a new Static IP Address**
 |---|---|
 | Request Action | Request |
 | Request Type | Application |
-| DNS | `methylprophetdb.duhs.duke.edu` |
+| DNS | `dreamlanddb.duhs.duke.edu` |
 | IP | TBD |
 | VRF | dmz |
 | Location | dksoprod-nc1 (NC1 Data Center 152.16.0.0/24 (NC-1 G4 DMZ)) |
 | LCR | `inferred-dna-methylation-db` |
-| Reason | Public vanity URL for MethylProphet DB (DKSO namespace `inferred-dna-methylation-db`) |
+| Reason | Public vanity URL for DreamlandDB (DKSO namespace `inferred-dna-methylation-db`) |
 
 Note the static IP you are assigned; steps 3 and 4 need it.
 
@@ -91,7 +91,7 @@ ServiceNow) filled in as:
 - Source: Any (internet)
 - Destination: the static IP from step 2
 - Ports: TCP 443 (and TCP 80, which redirects to 443)
-- Description: public HTTPS access to MethylProphet DB at `methylprophetdb.duhs.duke.edu`
+- Description: public HTTPS access to DreamlandDB at `dreamlanddb.duhs.duke.edu`
 
 ### 4. Load balancer proxy
 
@@ -99,7 +99,7 @@ Form: **Request Load Balancer/Proxy Change**
 
 | Field | Value |
 |---|---|
-| DNS name | `methylprophetdb.duhs.duke.edu` |
+| DNS name | `dreamlanddb.duhs.duke.edu` |
 | VIP IP (Forward Facing) | the static IP from step 2 |
 | Backend Servers (FQDN)(Pool Member) | `10.19.212.10` (NetScaler proxy VIP for dksoprod-nc1 ingress) |
 | Data center | NC1 |
@@ -111,9 +111,9 @@ Add under **Settings → CI/CD → Variables** (all **Protected**):
 
 | Key | Type | Value |
 |---|---|---|
-| `VANITY_HOST` | Variable | `methylprophetdb.duhs.duke.edu` |
+| `VANITY_HOST` | Variable | `dreamlanddb.duhs.duke.edu` |
 | `VANITY_TLS_CERT` | **File** | full-chain PEM certificate |
-| `VANITY_TLS_KEY` | **File** | private key (`secrets/methylprophetdb.key`) |
+| `VANITY_TLS_KEY` | **File** | private key (`secrets/dreamlanddb.key`) |
 
 Then rerun the latest pipeline (or push any commit). The deploy job creates a second
 OpenShift Route for the public hostname and prints `Public URL https://...`.

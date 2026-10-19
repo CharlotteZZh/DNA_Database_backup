@@ -29,7 +29,7 @@ route:
   # <release>-<namespace>.apps.dksoprod-nc1.dhe.duke.edu
   host: ""
 
-# Public vanity URL (e.g. methylprophetdb.duhs.duke.edu). Left empty until the
+# Public vanity URL (e.g. dreamlanddb.duhs.duke.edu). Left empty until the
 # DHTS certificate/DNS/firewall/load balancer requests are done; .gitlab-ci.yml
 # fills these from the VANITY_* CI/CD variables.
 vanity:
