@@ -1,0 +1,26 @@
+{{- if .Values.vanity.host }}
+# Public vanity URL; OpenShift serves the certificate at the edge
+# (DHTS guide: "Vanity Certificate Served by OpenShift")
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ .Release.Name }}-vanity
+  labels:
+    app: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+spec:
+  host: {{ .Values.vanity.host }}
+  to:
+    kind: Service
+    name: {{ .Release.Name }}
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+    certificate: |-
+{{ .Values.vanity.certificate | trim | indent 6 }}
+    key: |-
+{{ .Values.vanity.key | trim | indent 6 }}
+  wildcardPolicy: None
+{{- end }}

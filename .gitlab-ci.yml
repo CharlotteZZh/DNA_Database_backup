@@ -2,6 +2,8 @@
 # Requires in GitLab:
 #   - CI/CD variable HELM_TOKEN (from the namespace email)
 #   - Deploy token named gitlab-deploy-token with read_registry
+# Optional, for the public vanity URL (see docs/DEPLOYMENT.md):
+#   - VANITY_HOST (variable), VANITY_TLS_CERT and VANITY_TLS_KEY (File-type variables)
 
 stages:
   - build
@@ -31,13 +33,9 @@ workflow:
 build:
   extends: .kaniko_build
 
-# TEMPORARY: the Twistlock scanner (image-scanner.azure.dhe.duke.edu) has been
-# hanging/crashing and the CrowdStrike scan needs DPSS_SERVER_URL from DHTS.
-# The scan still runs on every pipeline but does not block deployment.
-# Remove allow_failure and the needs: lines below once DHTS fixes scanning.
 scan:
   extends: .docker_scan
-  allow_failure: true
+  # Fail instead of hanging for an hour if the scanner stops responding
   timeout: 15m
   artifacts:
     when: always
@@ -46,7 +44,6 @@ scan:
 
 tag:
   extends: .registry_image_tag
-  needs: [build]
   variables:
     FROM_TAG: $CI_COMMIT_SHORT_SHA
     TO_TAG: latest
@@ -54,8 +51,12 @@ tag:
 deploy:
   extends: .helm_deploy
   environment: production
-  needs: [tag]
   script:
+    - |
+      VANITY_ARGS=""
+      if [ -n "$VANITY_HOST" ]; then
+        VANITY_ARGS="--set-string vanity.host=$VANITY_HOST --set-file vanity.certificate=$VANITY_TLS_CERT --set-file vanity.key=$VANITY_TLS_KEY"
+      fi
     - helm upgrade --install $RELEASE_NAME ./chart
       --namespace $CLUSTER_NAMESPACE
       --history-max $MAX_HISTORY
@@ -64,9 +65,11 @@ deploy:
       --set-string registry.server=$CI_REGISTRY
       --set-string registry.username=$CI_DEPLOY_USER
       --set-string registry.password=$CI_DEPLOY_PASSWORD
+      $VANITY_ARGS
       --wait --timeout 5m
       || { kubectl logs deployment/$RELEASE_NAME --tail=100; kubectl logs deployment/$RELEASE_NAME --previous --tail=100 || true; kubectl get events --sort-by=.lastTimestamp | tail -30; exit 1; }
     - echo "App URL https://$(kubectl get route $RELEASE_NAME -o jsonpath='{.spec.host}')"
+    - if [ -n "$VANITY_HOST" ]; then echo "Public URL https://$VANITY_HOST"; fi
 
 decom:
   extends: .helm_decom

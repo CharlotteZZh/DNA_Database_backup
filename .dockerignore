@@ -18,3 +18,5 @@ pages/entry_page_backup.R
 data/pca
 **/*_OLD.tsv.gz
 **/.DS_Store
+docs
+secrets
