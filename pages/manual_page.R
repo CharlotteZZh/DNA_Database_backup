@@ -72,7 +72,7 @@ manual_ui <- function() {
         class = "page-heading",
         h1("User Manual"),
         p(
-          "A visual guide to MethylProphetDB: finding datasets, reading entry pages, ",
+          "A visual guide to DreamlandDB: finding datasets, reading entry pages, ",
           "exploring PCA, UMAP and spatial views, and downloading data and models."
         )
       ),
@@ -118,7 +118,7 @@ manual_ui <- function() {
             ),
             manual_shot(
               "01-navigation.jpg",
-              "MethylProphetDB About page with the navigation bar and Explore Datasets button highlighted",
+              "DreamlandDB About page with the navigation bar and Explore Datasets button highlighted",
               "1: navigation bar. 2: animation pause button. 3: Explore Datasets shortcut."
             )
           ),

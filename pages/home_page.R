@@ -10,7 +10,7 @@ home_ui <- function() {
         class = "about-hero-copy",
         h1(
           class = "hero-title",
-          "MethylProphetDB"
+          "DreamlandDB"
         ),
 
         h3(
@@ -51,7 +51,7 @@ home_ui <- function() {
         h2("Overview"),
 
         p(
-          "MethylProphetDB is a public database of DNA methylation landscapes predicted from bulk, single-cell, and spatial transcriptomic data."
+          "DreamlandDB is a public database of DNA methylation landscapes predicted from bulk, single-cell, and spatial transcriptomic data."
         ),
 
         p(
@@ -108,7 +108,7 @@ home_ui <- function() {
         h2("Database Contents"),
 
         p(
-          "MethylProphetDB brings together transcriptomic and methylation resources from normal tissues, cancers, single-cell atlases, and spatial transcriptomics."
+          "DreamlandDB brings together transcriptomic and methylation resources from normal tissues, cancers, single-cell atlases, and spatial transcriptomics."
         ),
 
         tags$ul(

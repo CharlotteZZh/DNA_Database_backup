@@ -14,7 +14,7 @@ ui <- navbarPage(
 
   title = div(
     style = "font-weight:700;",
-    "MethylProphet DB"
+    "DreamlandDB"
   ),
 
   id = "main_navbar",
@@ -101,7 +101,7 @@ ui <- navbarPage(
     div(
       class = "site-footer-text",
       p("Supported by the National Institutes of Health (NIH)."),
-      p(class = "site-footer-name", "MethylProphet DB")
+      p(class = "site-footer-name", "DreamlandDB")
     )
   )
 )

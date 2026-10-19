@@ -1,4 +1,4 @@
-# MethylProphet DB - Shiny app image for the Duke Kubernetes Service (DKSO / OpenShift)
+# DreamlandDB - Shiny app image for the Duke Kubernetes Service (DKSO / OpenShift)
 
 FROM rocker/r-ver:4.6.1
 

@@ -1,4 +1,4 @@
-# Build, scan and deploy MethylProphet DB to DKSO (OpenShift) using the DHTS CI templates.
+# Build, scan and deploy DreamlandDB to DKSO (OpenShift) using the DHTS CI templates.
 # Requires in GitLab:
 #   - CI/CD variable HELM_TOKEN (from the namespace email)
 #   - Deploy token named gitlab-deploy-token with read_registry

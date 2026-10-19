@@ -1,4 +1,4 @@
-# Deploying MethylProphet DB at Duke Health
+# Deploying DreamlandDB at Duke Health
 
 The app runs on the Duke Kubernetes Service (DKSO, Red Hat OpenShift), cluster
 `dksoprod-nc1`, namespace `inferred-dna-methylation-db`.

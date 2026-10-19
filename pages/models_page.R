@@ -30,7 +30,7 @@ models_ui <- function() {
             margin-bottom:40px;
             max-width:950px;
           ",
-          "MethylProphetDB integrates multiple transcriptome-to-methylome prediction frameworks for large-scale epigenomic reconstruction across tissues, cancers, and single-cell systems."
+          "DreamlandDB integrates multiple transcriptome-to-methylome prediction frameworks for large-scale epigenomic reconstruction across tissues, cancers, and single-cell systems."
         )
       ),
 
