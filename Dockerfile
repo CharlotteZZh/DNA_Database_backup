@@ -2,6 +2,11 @@
 
 FROM rocker/r-ver:4.6.1
 
+# Runtime system library for the prebuilt fs binary (used by bslib/sass)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libuv1 \
+    && rm -rf /var/lib/apt/lists/*
+
 # R packages used by app.R and pages/
 RUN install2.r --error --skipinstalled \
       shiny \
