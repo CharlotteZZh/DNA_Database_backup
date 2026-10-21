@@ -227,9 +227,11 @@ models_ui <- function() {
             ),
             
             br(),
-            
+
+            # RAMP R package, served from www/models
             tags$a(
-              href = "#",
+              href = "models/ramp-master.zip",
+              download = "ramp.zip",
               class = "btn btn-primary",
               "Download Model"
             )
