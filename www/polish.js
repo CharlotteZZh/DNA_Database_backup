@@ -212,7 +212,7 @@
           ctx.font = `600 9px ${font}`;
           ctx.textAlign = side > 0 ? "left" : "right";
           ctx.textBaseline = "middle";
-          ctx.fillStyle = `rgba(20,20,20,${(level - 0.75) * 4 * (p.depth - 0.35) * 1.3})`;
+          ctx.fillStyle = `rgba(230,240,252,${(level - 0.75) * 4 * (p.depth - 0.35) * 1.3})`;
           ctx.fillText("CH₃", mx + side * 7, my);
         }
       }
@@ -226,11 +226,11 @@
       ctx.beginPath(); ctx.arc(x, y - 16, 3.5, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(214,80,135,.95)"; ctx.shadowColor = "#f2b6cc"; ctx.shadowBlur = 8;
       ctx.fill(); ctx.shadowBlur = 0;
-      ctx.fillStyle = "rgba(17,17,17,.8)";
+      ctx.fillStyle = "rgba(230,240,252,.85)";
       ctx.fillText("5mC · methylated CpG", x + 11, y - 16);
       ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2);
       ctx.strokeStyle = "rgba(70,120,180,.9)"; ctx.lineWidth = 1.2; ctx.stroke();
-      ctx.fillStyle = "rgba(17,17,17,.8)";
+      ctx.fillStyle = "rgba(230,240,252,.85)";
       ctx.fillText("unmethylated CpG", x + 11, y);
     }
 

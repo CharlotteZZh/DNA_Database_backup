@@ -634,3 +634,104 @@ html.shiny-busy .entry-page::before {
   .manual-live-toggle.is-playing .manual-live-dot { animation: none; }
 }
 .manual-media.is-narrow img { max-width: 500px; }
+
+/* Dark blue theme: deep-water background with soft reflections and slow light
+   beams. Content cards stay light so tables and plots are unchanged. */
+:root { --mp-abyss: #061430; --mp-midnight: #0b2147; --mp-ocean: #12336a; --mp-glow: #a9d1f2; }
+html { background: var(--mp-abyss); }
+body {
+  background:
+    radial-gradient(ellipse 70% 45% at 18% -5%, #3d74c233, transparent 70%),
+    radial-gradient(ellipse 55% 40% at 88% 8%, #6f9fd024, transparent 70%),
+    linear-gradient(180deg, var(--mp-midnight) 0%, #0d2856 45%, var(--mp-abyss) 100%);
+  background-attachment: fixed;
+}
+/* Light beams fall from the upper left; reflections shimmer along the top. */
+body::before, body::after {
+  content: ""; position: fixed; inset: -10% -20%; z-index: -1; pointer-events: none;
+}
+body::before {
+  background:
+    linear-gradient(112deg, transparent 22%, #a9d1f20d 26%, transparent 31%),
+    linear-gradient(108deg, transparent 38%, #c4e0f60a 41%, transparent 45%),
+    linear-gradient(115deg, transparent 52%, #a9d1f20b 57%, transparent 63%),
+    linear-gradient(110deg, transparent 70%, #8fb8ea08 73%, transparent 77%);
+  mask-image: linear-gradient(180deg, #000 0%, #0009 55%, transparent 95%);
+  animation: beam-sway 28s ease-in-out infinite alternate;
+}
+body::after {
+  inset: 0 0 auto; height: 60vh;
+  background:
+    radial-gradient(ellipse 22% 6% at 30% 12%, #c4e0f617, transparent 70%),
+    radial-gradient(ellipse 16% 4% at 62% 20%, #a9d1f212, transparent 70%),
+    radial-gradient(ellipse 26% 5% at 82% 6%, #dcebf80f, transparent 70%);
+  animation: reflection-shimmer 11s ease-in-out infinite alternate;
+}
+@keyframes beam-sway { from { transform: translateX(-3%) skewX(-2deg); } to { transform: translateX(3%) skewX(2deg); } }
+@keyframes reflection-shimmer { from { opacity: .55; } to { opacity: 1; } }
+.decorations-paused body::before, .decorations-paused body::after { animation-play-state: paused !important; }
+@media (prefers-reduced-motion: reduce) { body::before, body::after { animation: none !important; } }
+
+.navbar {
+  background: linear-gradient(90deg, #050f26, var(--mp-midnight) 45%, #16407e) !important;
+  box-shadow: 0 1px 0 #a9d1f21f, 0 10px 30px #00000040;
+}
+.navbar > .container-fluid, .navbar > .container {
+  background: linear-gradient(115deg, #ffffff1c, #ffffff05 40%, #ffffff0d);
+}
+
+/* About: dark hero with luminous copy; light cards keep their colors. */
+.about-page { background: transparent; color: #e6effb; }
+.about-page .hero-section {
+  background:
+    radial-gradient(ellipse at 85% 35%, #4f86d040 0%, transparent 45%),
+    radial-gradient(ellipse at 20% 0%, #a9d1f21f, transparent 55%),
+    linear-gradient(135deg, #0c2550, var(--mp-ocean) 50%, #0e2a5a);
+  border-bottom: 1px solid #a9d1f21f;
+}
+.about-page .hero-section::before { background-image: radial-gradient(#a9d1f2 0.6px, transparent 0.6px); opacity: 0.14; }
+.about-page .hero-title { color: #ffffff; text-shadow: 0 0 40px #8fb8ea40; }
+.about-page .hero-subtitle { color: #dbe8f8; }
+.about-page .hero-text { color: #b8cbe4; }
+.about-page .main-button {
+  color: var(--mp-midnight) !important; background: linear-gradient(135deg, #ffffff, #c4e0f6) !important;
+  border-color: #c4e0f6 !important; box-shadow: 0 6px 28px #a9d1f233;
+}
+.about-page .main-button:hover { background: linear-gradient(135deg, #ffffff, #a9d1f2) !important; box-shadow: 0 10px 32px #a9d1f24d; }
+.about-art-glow { background: #8fb8ea40; }
+.about-orbit { border-color: #a9d1f233; }
+#about-dna-canvas { filter: brightness(1.55) saturate(1.1); }
+.about-section h2, .about-contents h4 { color: #ffffff; }
+.about-section p, .about-publications li { color: #b8cbe4; }
+.about-overview p:first-of-type { color: #e6effb; }
+.about-overview, .about-publications { border-color: #a9d1f22e; }
+/* !important beats the inline dark color on the paper title link */
+.about-publications a { color: var(--mp-glow) !important; }
+/* The PCA card stays pale, so its text stays dark */
+.about-pca h2 { color: var(--mp-ink); }
+.about-pca p { color: var(--mp-muted); }
+.about-applications { border-color: #a9d1f240; box-shadow: inset 0 1px 0 #ffffff1a; }
+
+/* Page headers: dark glass panels with a soft top reflection. */
+.site-page .page-heading {
+  background:
+    linear-gradient(180deg, #ffffff12, transparent 40%),
+    radial-gradient(ellipse at 85% 30%, #4f86d040, transparent 50%),
+    linear-gradient(110deg, #16407e, var(--mp-ocean) 40%, #0f2d5c);
+  border-color: #a9d1f238; border-left-color: #6f9fd0;
+  box-shadow: 0 18px 42px -24px #00000080, inset 0 1px 0 #ffffff26;
+}
+.site-page .page-heading::before { background: linear-gradient(90deg, #a9d1f2, #6f9fd0, transparent); }
+.site-page .page-heading::after { background-image: radial-gradient(#a9d1f233 .7px, transparent .7px); }
+.site-page .page-heading > h1 { color: #ffffff !important; }
+.site-page .page-heading > p { color: #c9d9ee !important; }
+.page-heading .header-sculpture { filter: brightness(1.8); }
+.site-page .feature-card { box-shadow: 0 14px 40px -24px #000000a0, 0 0 0 1px #ffffff10; }
+
+.site-footer {
+  background: linear-gradient(180deg, transparent, #050f26);
+  border-top: 1px solid #a9d1f22e;
+}
+.site-footer-logo img { background: #ffffff; padding: 8px; border-radius: 10px; }
+.site-footer-text p { color: #e6effb; }
+.site-footer-text .site-footer-name { color: #a9bfdc; }
