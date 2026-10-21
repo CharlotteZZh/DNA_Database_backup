@@ -1,0 +1,21 @@
+{{- if .Values.vanity.host }}
+# cert-manager Issuer for the public vanity URL; gets certificates from OIT's
+# Locksmith (DHTS guide: "ACME enabled Internal Routes and Ingresses")
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: locksmith-issuer
+  labels:
+    app: cert-manager-openshift-routes
+    release: {{ .Release.Name }}
+spec:
+  acme:
+    # Must be a Grouper support group email; Locksmith sends certificate notices here
+    email: {{ required "vanity.issuerEmail is required" .Values.vanity.issuerEmail }}
+    privateKeySecretRef:
+      name: {{ .Release.Name }}-locksmith-account
+    server: https://locksmith.oit.duke.edu/acme/v2/directory
+    solvers:
+      - http01:
+          ingress: {}
+{{- end }}

@@ -38,89 +38,67 @@ GitLab settings the pipeline relies on:
 
 ## Making the site public
 
-Per the DHTS guide *Vanity URLs in DKSO → External Vanity URL*, four ServiceNow
-requests are needed, **in this order**. Submit each from
-https://duke.service-now.com (search the catalog for the form name).
+Per the DHTS guides *Vanity URLs in DKSO → External Vanity URL* and *SSL Automation
+at Duke Health*, the public URL needs a static IP, a firewall rule and a load balancer
+(requested through ServiceNow at https://duke.service-now.com), plus a certificate that
+cert-manager gets automatically from OIT's Locksmith.
 
-### 1. SSL certificate
+| Request | Status |
+|---|---|
+| Static IP in the NC1 DMZ: `dreamlanddb.duhs.duke.edu` → `152.16.3.61` | Done (Oct 2026) |
+| Firewall rule, inbound TCP 443 from the internet | RITM8686642 |
+| Load balancer, `152.16.3.61` → NetScaler VIP `10.19.212.10`, HTTP → HTTPS redirect | RITM8686667 |
 
-Form: **Request or Manage Duke Health SSL Certificates**
+Do **not** request a certificate through the ServiceNow SSL form. DHTS does not support
+certificates installed only on the load balancer; the certificate lives in OpenShift.
 
-- Common name: `dreamlanddb.duhs.duke.edu`
-- Purpose: public web application (DreamlandDB research database), hosted on
-  DKSO `dksoprod-nc1`, namespace `inferred-dna-methylation-db`
+### 1. Check that the network side is ready
 
-If the form asks for a CSR, generate one locally. The `secrets/` folder is ignored by
-git and never leaves your machine:
+From a machine off the Duke network and VPN:
 
 ```
-mkdir -p secrets
-openssl req -new -newkey rsa:2048 -nodes \
-  -keyout secrets/dreamlanddb.key \
-  -out secrets/dreamlanddb.csr \
-  -subj "/C=US/ST=North Carolina/L=Durham/O=Duke University/CN=dreamlanddb.duhs.duke.edu"
+curl -skv --max-time 10 https://dreamlanddb.duhs.duke.edu -o /dev/null
 ```
 
-When the certificate is issued, download **"Certificate (w/ issuer after), PEM
-encoded"** (full chain).
+- Times out: the firewall or load balancer is not in place yet.
+- HTTP 503 "Application is not available": traffic reaches OpenShift. Go on to step 2.
 
-### 2. Static IP in the DMZ
+Locksmith checks the hostname over the internet before it issues a certificate
+(http-01 challenge), so step 2 only works once this returns 503. Locksmith allows
+only 3 requests per certificate per day, so do not retry over and over.
 
-Form: **Request a new Static IP Address**
+### 2. Turn on the public route
 
-| Field | Value |
-|---|---|
-| Request Action | Request |
-| Request Type | Application |
-| DNS | `dreamlanddb.duhs.duke.edu` |
-| IP | TBD |
-| VRF | dmz |
-| Location | dksoprod-nc1 (NC1 Data Center 152.16.0.0/24 (NC-1 G4 DMZ)) |
-| LCR | `inferred-dna-methylation-db` |
-| Reason | Public vanity URL for DreamlandDB (DKSO namespace `inferred-dna-methylation-db`) |
+Under **Settings → CI/CD → Variables**, add `VANITY_HOST` = `dreamlanddb.duhs.duke.edu`
+(Protected), then rerun the latest pipeline (or push any commit). The deploy creates:
 
-Note the static IP you are assigned; steps 3 and 4 need it.
+- `chart/templates/vanity-issuer.yaml`: a cert-manager Issuer (`locksmith-issuer`) that
+  registers with Locksmith using the Grouper support group
+  `groups-dhts-academic-suppport-admins@duke.edu` (`vanity.issuerEmail` in
+  `chart/values.yaml`; "suppport" with three p's is the real address).
+- `chart/templates/vanity-route.yaml`: an edge-terminated Route for the public hostname,
+  annotated `cert-manager.io/issuer: locksmith-issuer`. cert-manager requests the
+  certificate and copies it into the Route.
 
-### 3. Firewall rule (2-3 business days for security approval)
+When it works, the Grouper group receives a confirmation email and the certificate shows
+up on Locksmith's cert page. cert-manager renews it about 30 days before it expires; no
+manual renewal is needed.
 
-Form: **Request a Firewall Rule Change**
+Afterwards, add **ACME/Locksmith Auto-Renewal** to the *SSL Certificate Information*
+field on the app's ServiceNow application record.
 
-Attach the **Sample Firewall Request Spreadsheet for Vanity URLs** (download it from
-ServiceNow) filled in as:
+### Certificate troubleshooting
 
-- Source: Any (internet)
-- Destination: the static IP from step 2
-- Ports: TCP 443 (and TCP 80, which redirects to 443)
-- Description: public HTTPS access to DreamlandDB at `dreamlanddb.duhs.duke.edu`
+```
+kubectl get issuers,certificates,certificaterequests,orders,challenges -n inferred-dna-methylation-db
+kubectl describe challenges -n inferred-dna-methylation-db
+```
 
-### 4. Load balancer proxy
-
-Form: **Request Load Balancer/Proxy Change**
-
-| Field | Value |
-|---|---|
-| DNS name | `dreamlanddb.duhs.duke.edu` |
-| VIP IP (Forward Facing) | the static IP from step 2 |
-| Backend Servers (FQDN)(Pool Member) | `10.19.212.10` (NetScaler proxy VIP for dksoprod-nc1 ingress) |
-| Data center | NC1 |
-| TCP/UDP Service Port | 443 (and 80) |
-
-### 5. Turn on the public route (in GitLab, after the certificate is issued)
-
-Add under **Settings → CI/CD → Variables** (all **Protected**):
-
-| Key | Type | Value |
-|---|---|---|
-| `VANITY_HOST` | Variable | `dreamlanddb.duhs.duke.edu` |
-| `VANITY_TLS_CERT` | **File** | full-chain PEM certificate |
-| `VANITY_TLS_KEY` | **File** | private key (`secrets/dreamlanddb.key`) |
-
-Then rerun the latest pipeline (or push any commit). The deploy job creates a second
-OpenShift Route for the public hostname and prints `Public URL https://...`.
-
-The certificate has to be renewed before it expires. Update `VANITY_TLS_CERT` and
-rerun the pipeline. (DHTS also offers automated renewal through cert-manager; see
-*SSL Automation at Duke Health* in the developer guide.)
+- A pending challenge usually means Locksmith cannot reach the hostname (firewall or
+  load balancer). Locksmith's ACME logs show why validation failed.
+- To reissue a certificate, delete the Secret listed by `kubectl get certificates`.
+- To change the notification email, delete the Issuer, change `vanity.issuerEmail` and
+  redeploy.
 
 ## Troubleshooting
 

@@ -3,7 +3,7 @@
 #   - CI/CD variable HELM_TOKEN (from the namespace email)
 #   - Deploy token named gitlab-deploy-token with read_registry
 # Optional, for the public vanity URL (see docs/DEPLOYMENT.md):
-#   - VANITY_HOST (variable), VANITY_TLS_CERT and VANITY_TLS_KEY (File-type variables)
+#   - VANITY_HOST (variable); the certificate comes from cert-manager
 
 stages:
   - build
@@ -55,7 +55,7 @@ deploy:
     - |
       VANITY_ARGS=""
       if [ -n "$VANITY_HOST" ]; then
-        VANITY_ARGS="--set-string vanity.host=$VANITY_HOST --set-file vanity.certificate=$VANITY_TLS_CERT --set-file vanity.key=$VANITY_TLS_KEY"
+        VANITY_ARGS="--set-string vanity.host=$VANITY_HOST"
       fi
     - helm upgrade --install $RELEASE_NAME ./chart
       --namespace $CLUSTER_NAMESPACE

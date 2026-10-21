@@ -30,10 +30,11 @@ route:
   host: ""
 
 # Public vanity URL (e.g. dreamlanddb.duhs.duke.edu). Left empty until the
-# DHTS certificate/DNS/firewall/load balancer requests are done; .gitlab-ci.yml
-# fills these from the VANITY_* CI/CD variables.
+# DHTS DNS/firewall/load balancer requests are done; .gitlab-ci.yml fills
+# host from the VANITY_HOST CI/CD variable. The certificate comes from
+# cert-manager/Locksmith.
 vanity:
   host: ""
-  # PEM certificate with the full chain, and its private key
-  certificate: ""
-  key: ""
+  # Grouper support group that receives certificate notices
+  # ("suppport" with three p's is the group's real address)
+  issuerEmail: groups-dhts-academic-suppport-admins@duke.edu

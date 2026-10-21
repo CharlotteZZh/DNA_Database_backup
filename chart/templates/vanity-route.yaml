@@ -1,6 +1,6 @@
 {{- if .Values.vanity.host }}
-# Public vanity URL; OpenShift serves the certificate at the edge
-# (DHTS guide: "Vanity Certificate Served by OpenShift")
+# Public vanity URL. cert-manager fills in spec.tls.certificate/key from
+# Locksmith and renews them automatically; see vanity-issuer.yaml
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -8,6 +8,8 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
     release: {{ .Release.Name }}
+  annotations:
+    cert-manager.io/issuer: locksmith-issuer
 spec:
   host: {{ .Values.vanity.host }}
   to:
@@ -18,9 +20,5 @@ spec:
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
-    certificate: |-
-{{ .Values.vanity.certificate | trim | indent 6 }}
-    key: |-
-{{ .Values.vanity.key | trim | indent 6 }}
   wildcardPolicy: None
 {{- end }}
