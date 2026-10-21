@@ -154,8 +154,10 @@ models_ui <- function() {
             
             br(),
             
+            # MethylProphet code, served from www/models
             tags$a(
-              href = "#",
+              href = "models/MethylProphet-main.zip",
+              download = "methylprophet.zip",
               class = "btn btn-primary",
               "Download Model"
             ),
@@ -172,7 +174,8 @@ models_ui <- function() {
             br(), br(),
             
             tags$a(
-              href = "#",
+              href = "https://huggingface.co/MethylProphet",
+              target = "_blank",
               class = "btn btn-outline-primary",
               "Pretrained Weights"
             )
