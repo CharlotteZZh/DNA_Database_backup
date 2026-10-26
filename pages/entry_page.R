@@ -1067,31 +1067,6 @@ entry_ui <- function() {
             class = "feature-card",
 
             h2(
-              "Dataset Description"
-            ),
-
-            p(
-
-              style = "
-                font-size:16px;
-                line-height:1.7;
-                color:#475569;
-                margin-bottom:0;
-              ",
-
-              textOutput(
-                "dataset_notes"
-              )
-            )
-          ),
-
-          br(),
-
-          div(
-
-            class = "feature-card",
-
-            h2(
 
               style = "
                 font-size:24px;
@@ -1101,31 +1076,25 @@ entry_ui <- function() {
               "Downloads (cancer/cell/tissue-specific)"
             ),
 
-            br(),
+            div(
 
-            uiOutput(
-              "prediction_download"
-            ),
+              class = "entry-download-list",
 
-            br(),
-            br(),
+              uiOutput(
+                "prediction_download"
+              ),
 
-            uiOutput(
-              "source_download"
-            ),
+              uiOutput(
+                "source_download"
+              ),
 
-            br(),
-            br(),
+              uiOutput(
+                "rna_download"
+              ),
 
-            uiOutput(
-              "rna_download"
-            ),
-
-            br(),
-            br(),
-
-            uiOutput(
-              "track_download"
+              uiOutput(
+                "track_download"
+              )
             ),
 
             uiOutput(
@@ -1305,6 +1274,33 @@ entry_server <- function(
 
     selected_entry()
   })
+
+
+  # Model that produced this entry's predicted DNAm ("" if none).
+  entry_model <- reactive({
+
+    model <- safe_metadata_value(
+      current_entry(),
+      "model",
+      ""
+    )
+
+    if (is.na(model)) "" else trimws(as.character(model))
+  })
+
+
+  # Appends the model name to a predicted-data label, e.g.
+  # "Predicted DNAm (Ramp)".
+  predicted_label <- function(label) {
+
+    model <- entry_model()
+
+    if (nzchar(model)) {
+      paste0(label, " (", model, ")")
+    } else {
+      label
+    }
+  }
 
 
   # ==========================================================
@@ -1755,63 +1751,32 @@ entry_server <- function(
             p(
               methylation_assay
             )
-          )
+          ),
+
+
+          if (nzchar(entry_model())) {
+
+            div(
+
+              class = "meta-stat meta-stat-wide",
+
+              h5(
+                "Predicted by"
+              ),
+
+              p(
+
+                tags$a(
+                  entry_model(),
+                  href = "#",
+                  onclick = "$('#main_navbar a[data-value=\"Models\"]').tab('show'); window.scrollTo(0, 0); return false;"
+                )
+              )
+            )
+          }
         )
       )
     )
-  })
-
-
-  # ==========================================================
-  # DATASET DESCRIPTION
-  # ==========================================================
-
-  output$dataset_notes <- renderText({
-
-    if (
-      is_spatial_entry()
-    ) {
-
-      entry <- current_entry()
-
-      tissue <- tolower(
-        safe_metadata_value(
-          entry,
-          "tissue",
-          ""
-        )
-      )
-
-      if (
-        grepl(
-          "pancreas",
-          tissue
-        )
-      ) {
-
-        paste(
-          "This spatial entry contains Ramp-predicted DNA methylation across 20 mouse pancreas Visium slides.",
-          "Select a CpG to visualize its predicted DNAm spatial distribution across the slides.",
-          "Spatial RNA expression is not displayed in this visualization."
-        )
-
-      } else {
-
-        paste(
-          "This spatial entry contains spatially resolved DNA methylation measurements and Ramp-predicted DNA methylation.",
-          "Select a methylation feature to visualize its spatial distribution across the available spatial samples.",
-          "Spatial RNA expression is not displayed in this visualization."
-        )
-      }
-
-    } else {
-
-      paste(
-        "This entry represents a tissue- or cohort-specific subset of the",
-        current_entry()$dataset[1],
-        "dataset. Interactive PCA and UMAP embeddings are computed at the full dataset level to preserve global biological structure and enable cross-tissue or cross-cohort comparisons."
-      )
-    }
   })
 
 
@@ -1846,8 +1811,9 @@ entry_server <- function(
 
           "Methylation",
 
-          choices = c(
-            "Predicted DNAm" = "predicted"
+          choices = setNames(
+            "predicted",
+            predicted_label("Predicted DNAm")
           ),
 
           selected = "predicted",
@@ -1864,9 +1830,9 @@ entry_server <- function(
 
       "Methylation",
 
-      choices = c(
-        "Predicted DNAm" = "predicted",
-        "Measured DNAm" = "observed"
+      choices = setNames(
+        c("predicted", "observed"),
+        c(predicted_label("Predicted DNAm"), "Measured DNAm")
       ),
 
       selected = "predicted",
@@ -2268,7 +2234,7 @@ entry_server <- function(
 
       tabPanel(
 
-        "Predicted DNAm",
+        predicted_label("Predicted DNAm"),
 
         plotlyOutput(
           "entry_pca_pred",
@@ -2363,7 +2329,7 @@ entry_server <- function(
 
       tabPanel(
 
-        "Predicted DNAm",
+        predicted_label("Predicted DNAm"),
 
         plotlyOutput(
           "entry_umap_pred",
@@ -2467,7 +2433,7 @@ entry_server <- function(
 
       current_entry()$tissue[1],
 
-      "Predicted DNAm — PCA"
+      paste(predicted_label("Predicted DNAm"), "— PCA")
     )
   })
 
@@ -2525,7 +2491,7 @@ entry_server <- function(
 
       current_entry()$tissue[1],
 
-      "Predicted DNAm — UMAP"
+      paste(predicted_label("Predicted DNAm"), "— UMAP")
     )
   })
 
@@ -2577,7 +2543,7 @@ entry_server <- function(
 
       href,
 
-      "Download Predicted DNAm",
+      predicted_label("Download Predicted DNAm"),
 
       primary = TRUE
     )
@@ -2733,8 +2699,8 @@ entry_server <- function(
     div(
 
       style = "
-        margin-top:24px;
-        padding-top:18px;
+        margin-top:16px;
+        padding-top:14px;
         border-top:1px solid #dae3e8;
       ",
 
@@ -2742,7 +2708,7 @@ entry_server <- function(
         style = "
           font-size:16px;
           font-weight:600;
-          margin-bottom:12px;
+          margin-bottom:8px;
         ",
         title
       ),

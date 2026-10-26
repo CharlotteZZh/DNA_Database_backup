@@ -115,7 +115,10 @@ get_full_datasets <- function(
         label <- paste(label, first$expression_label)
       }
 
-      if (length(unique(siblings$assay)) > 1) {
+      # Assay is compared against every group from the same
+      # source, so e.g. TARGET 450K is named apart from the
+      # single-cohort TARGET EPIC downloads.
+      if (length(unique(metadata$assay[metadata$dataset == first$dataset])) > 1) {
         label <- paste(label, first$assay)
       }
 

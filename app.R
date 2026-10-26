@@ -98,10 +98,15 @@ ui <- navbarPage(
         alt = "National Institutes of Health"
       )
     ),
-    div(
-      class = "site-footer-text",
-      p("Supported by the National Institutes of Health (NIH)."),
-      p(class = "site-footer-name", "DreamlandDB")
+    tags$a(
+      href = "https://www.duke.edu",
+      target = "_blank",
+      rel = "noopener",
+      class = "site-footer-logo",
+      tags$img(
+        src = "images/duke-logo.svg",
+        alt = "Duke University"
+      )
     )
   )
 )

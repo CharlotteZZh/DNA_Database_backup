@@ -299,39 +299,6 @@ models_ui <- function() {
             )
           )
         )
-      ),
-      
-      br(),
-      
-      # =========================================
-      # RESOURCES
-      # =========================================
-      
-      div(
-        class = "feature-card model-resources",
-        style = "
-          background: linear-gradient(135deg,#F8FAFC,#EFF6FF);
-        ",
-        
-        h2("Resources"),
-        
-        tags$ul(
-          tags$li(
-            tags$a(
-              "OpenReview Paper",
-              href = "https://openreview.net/forum?id=8wQ7Oc08vo",
-              target = "_blank"
-            )
-          ),
-          tags$li("Model download links"),
-          tags$li(
-            tags$a(
-              "User manual",
-              href = "#",
-              onclick = "$('#main_navbar a[data-value=\"User Manual\"]').tab('show'); window.scrollTo(0, 0); return false;"
-            )
-          )
-        )
       )
     )
   )

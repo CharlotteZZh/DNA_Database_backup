@@ -308,7 +308,8 @@ explore_server <- function(
         "disease_status",
         "tissue",
         "gene_expression",
-        "dna_methylation_assay"
+        "dna_methylation_assay",
+        "model"
       )
     ]
     
