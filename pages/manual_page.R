@@ -112,8 +112,9 @@ manual_ui <- function() {
               manual_bold("About"), " introduces the database, ",
               manual_bold("Datasets"), " is where you search entries, ",
               manual_bold("Full Datasets"), " lists whole-dataset downloads, ",
-              manual_bold("Models"), " describes the prediction models, and ",
-              manual_bold("News"), " lists updates. Clicking ",
+              manual_bold("Models"), " describes the prediction models, ",
+              manual_bold("News"), " lists updates, and ",
+              manual_bold("User Manual"), " opens this guide. Clicking ",
               manual_bold("Explore Datasets"), " on the About page also takes you to the search."
             ),
             manual_shot(
