@@ -632,13 +632,13 @@ html.shiny-busy .entry-page::before {
 
 /* Dark blue theme: deep-water background with soft reflections and slow light
    beams. Content cards stay light so tables and plots are unchanged. */
-:root { --mp-abyss: #061430; --mp-midnight: #0b2147; --mp-ocean: #12336a; --mp-glow: #a9d1f2; }
+:root { --mp-abyss: #0b1d40; --mp-midnight: #12295a; --mp-ocean: #1a3f7c; --mp-glow: #a9d1f2; }
 html { background: var(--mp-abyss); }
 body {
   background:
     radial-gradient(ellipse 70% 45% at 18% -5%, #3d74c233, transparent 70%),
     radial-gradient(ellipse 55% 40% at 88% 8%, #6f9fd024, transparent 70%),
-    linear-gradient(180deg, var(--mp-midnight) 0%, #0d2856 45%, var(--mp-abyss) 100%);
+    linear-gradient(180deg, var(--mp-midnight) 0%, #14316a 45%, var(--mp-abyss) 100%);
   background-attachment: fixed;
 }
 /* Light beams fall from the upper left; reflections shimmer along the top. */
@@ -668,7 +668,7 @@ body::after {
 @media (prefers-reduced-motion: reduce) { body::before, body::after { animation: none !important; } }
 
 .navbar {
-  background: linear-gradient(90deg, #050f26, var(--mp-midnight) 45%, #16407e) !important;
+  background: linear-gradient(90deg, #0a1835, var(--mp-midnight) 45%, #1e4c90) !important;
   box-shadow: 0 1px 0 #a9d1f21f, 0 10px 30px #00000040;
 }
 .navbar > .container-fluid, .navbar > .container {
@@ -681,7 +681,7 @@ body::after {
   background:
     radial-gradient(ellipse at 85% 35%, #4f86d040 0%, transparent 45%),
     radial-gradient(ellipse at 20% 0%, #a9d1f21f, transparent 55%),
-    linear-gradient(135deg, #0c2550, var(--mp-ocean) 50%, #0e2a5a);
+    linear-gradient(135deg, #132e62, var(--mp-ocean) 50%, #15336c);
   border-bottom: 1px solid #a9d1f21f;
 }
 .about-page .hero-section::before { background-image: radial-gradient(#a9d1f2 0.6px, transparent 0.6px); opacity: 0.14; }
@@ -708,7 +708,7 @@ body::after {
   background:
     linear-gradient(180deg, #ffffff12, transparent 40%),
     radial-gradient(ellipse at 85% 30%, #4f86d040, transparent 50%),
-    linear-gradient(110deg, #16407e, var(--mp-ocean) 40%, #0f2d5c);
+    linear-gradient(110deg, #1e4c90, var(--mp-ocean) 40%, #16366e);
   border-color: #a9d1f238; border-left-color: #6f9fd0;
   box-shadow: 0 18px 42px -24px #00000080, inset 0 1px 0 #ffffff26;
 }
@@ -720,9 +720,38 @@ body::after {
 .site-page .feature-card { box-shadow: 0 14px 40px -24px #000000a0, 0 0 0 1px #ffffff10; }
 
 .site-footer {
-  background: linear-gradient(180deg, transparent, #050f26);
+  background: linear-gradient(180deg, transparent, #0a1835);
   border-top: 1px solid #a9d1f22e;
 }
 .site-footer-logo img { background: #ffffff; padding: 8px; border-radius: 10px; }
 .site-footer-text p { color: #e6effb; }
 .site-footer-text .site-footer-name { color: #a9bfdc; }
+
+/* Motion: pages and tabs slide in, cards rise in sequence. */
+@keyframes mp-slide-in {
+  from { opacity: 0; transform: translate3d(36px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mp-rise-in {
+  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+.tab-content > .tab-pane.active { animation: mp-slide-in 520ms cubic-bezier(.22, .9, .3, 1) both; }
+.tab-content > .tab-pane.active .feature-card,
+.tab-content > .tab-pane.active .about-feature,
+.tab-content > .tab-pane.active .page-heading {
+  animation: mp-rise-in 620ms cubic-bezier(.22, .9, .3, 1) both;
+}
+.tab-content > .tab-pane.active .page-heading { animation-delay: 60ms; }
+.tab-content > .tab-pane.active .row > div:nth-child(1) > .feature-card,
+.tab-content > .tab-pane.active .about-feature:nth-child(1) { animation-delay: 140ms; }
+.tab-content > .tab-pane.active .row > div:nth-child(2) > .feature-card,
+.tab-content > .tab-pane.active .about-feature:nth-child(2) { animation-delay: 220ms; }
+.tab-content > .tab-pane.active .row > div:nth-child(3) > .feature-card,
+.tab-content > .tab-pane.active .about-feature:nth-child(3) { animation-delay: 300ms; }
+/* Tabs inside a card slide without re-running the card animation. */
+.feature-card .tab-content > .tab-pane.active { animation: mp-slide-in 420ms cubic-bezier(.22, .9, .3, 1) both; }
+.feature-card .tab-content > .tab-pane.active .feature-card { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .tab-content > .tab-pane.active, .tab-content > .tab-pane.active * { animation: none !important; }
+}
