@@ -7,16 +7,24 @@ library(shiny)
 # punctuation can follow directly ("Dataset, Species").
 manual_bold <- function(...) tags$strong(..., .noWS = "outside")
 
+# URL for a file in www/manual/, tagged with its modification time so browsers
+# fetch a replaced screenshot instead of reusing a cached copy.
+manual_src <- function(file) {
+  mtime <- file.mtime(file.path("www", "manual", file))
+  url <- paste0("manual/", file)
+  if (is.na(mtime)) url else paste0(url, "?v=", as.integer(mtime))
+}
+
 manual_shot <- function(file, alt, caption = NULL, narrow = FALSE) {
   tags$figure(
     class = paste("manual-media", if (narrow) "is-narrow"),
     tags$a(
-      href = paste0("manual/", file),
+      href = manual_src(file),
       target = "_blank",
       rel = "noopener",
       title = "Open full-size image",
       tags$img(
-        src = paste0("manual/", file),
+        src = manual_src(file),
         alt = alt,
         loading = "lazy"
       )
@@ -34,9 +42,9 @@ manual_live <- function(name, alt, caption = NULL) {
       `aria-label` = paste("Play or pause animation:", alt),
       `aria-pressed` = "false",
       tags$img(
-        src = paste0("manual/", name, "-poster.jpg"),
-        `data-poster` = paste0("manual/", name, "-poster.jpg"),
-        `data-anim` = paste0("manual/", name, ".webp"),
+        src = manual_src(paste0(name, "-poster.jpg")),
+        `data-poster` = manual_src(paste0(name, "-poster.jpg")),
+        `data-anim` = manual_src(paste0(name, ".webp")),
         alt = alt,
         loading = "lazy"
       ),
