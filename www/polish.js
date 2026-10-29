@@ -330,3 +330,239 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize, { once: true });
   else initialize();
 })();
+
+/* Decorative critters: a walking DNA mascot in the masthead and drifting cells
+   behind the page. Purely visual; follows the pause button and reduced motion. */
+(() => {
+  "use strict";
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const MASCOT = `
+    <svg viewBox="0 0 32 40" width="32" height="40" aria-hidden="true">
+      <defs>
+        <linearGradient id="mascot-skin-KEY" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#eef5fc"/><stop offset="1" stop-color="#8fb8ea"/>
+        </linearGradient>
+        <clipPath id="mascot-clip-KEY"><rect x="6" y="3" width="20" height="26" rx="10"/></clipPath>
+      </defs>
+      <g class="mascot-leg mascot-leg-l"><path d="M12 27 L12 36" /><path d="M12 36 L9.5 36.5" /></g>
+      <g class="mascot-leg mascot-leg-r"><path d="M20 27 L20 36" /><path d="M20 36 L22.5 36.5" /></g>
+      <g class="mascot-arm mascot-arm-l"><path d="M6.5 17 L2.5 21" /></g>
+      <g class="mascot-arm mascot-arm-r"><path d="M25.5 17 L29.5 21" /></g>
+      <rect x="6" y="3" width="20" height="26" rx="10" fill="url(#mascot-skin-KEY)" stroke="#ffffff" stroke-width="1.2"/>
+      <g clip-path="url(#mascot-clip-KEY)" fill="none" stroke-width="1.6" stroke-linecap="round">
+        <path d="M6 15 C11 19 21 19 26 23 M6 23 C11 27 21 27 26 31" stroke="#d65087" opacity=".75"/>
+        <path d="M6 23 C11 19 21 19 26 15 M6 31 C11 27 21 27 26 23" stroke="#2f6fb3" opacity=".75"/>
+        <path d="M11 19.5 L11 22.5 M16 19 L16 23 M21 19.5 L21 22.5" stroke="#6f9fd0" stroke-width="1.1" opacity=".7"/>
+      </g>
+      <g class="mascot-eyes" fill="#10224a">
+        <ellipse cx="12.5" cy="10.5" rx="1.6" ry="2.1"/><ellipse cx="19.5" cy="10.5" rx="1.6" ry="2.1"/>
+      </g>
+      <circle cx="12.9" cy="9.8" r=".55" fill="#fff"/><circle cx="19.9" cy="9.8" r=".55" fill="#fff"/>
+      <circle cx="9.8" cy="14" r="1.3" fill="#f2b6cc" opacity=".8"/><circle cx="22.2" cy="14" r="1.3" fill="#f2b6cc" opacity=".8"/>
+      <path d="M14.3 13.6 Q16 15.2 17.7 13.6" fill="none" stroke="#10224a" stroke-width="1" stroke-linecap="round"/>
+    </svg>`;
+  const mascotSvg = key => MASCOT.replaceAll("KEY", key);
+
+  // Welcome card: the mascot greets new visitors once per browser session,
+  // then dissolves and hands over to the walking mascot in the masthead.
+  const WELCOME_TITLE = "Hi! Welcome to DreamlandDB";
+  const WELCOME_TEXT = "Here you can explore predicted DNA methylation across tissues, cancer types and single cells.";
+  function welcome(reducedMotion) {
+    try { if (sessionStorage.getItem("dreamland-welcomed")) return; } catch (e) { /* storage blocked */ }
+    try { sessionStorage.setItem("dreamland-welcomed", "1"); } catch (e) { /* storage blocked */ }
+    const card = document.createElement("div");
+    card.className = "welcome-card";
+    card.setAttribute("role", "status");
+    card.setAttribute("aria-live", "polite");
+    card.innerHTML = `
+      <div class="welcome-mascot" aria-hidden="true">${mascotSvg("welcome")}</div>
+      <div class="welcome-bubble">
+        <strong class="welcome-title"></strong>
+        <p class="welcome-text"></p>
+      </div>
+      <button type="button" class="welcome-close" aria-label="Close welcome message">×</button>`;
+    // A blurred backdrop keeps the focus on the greeting; it clears as the card dissolves.
+    const backdrop = document.createElement("div");
+    backdrop.className = "welcome-backdrop";
+    backdrop.setAttribute("aria-hidden", "true");
+    document.body.append(backdrop, card);
+    const title = card.querySelector(".welcome-title"), text = card.querySelector(".welcome-text");
+    const still = reducedMotion.matches || !Element.prototype.animate;
+    let closing = false, typing = 0, timer = 0;
+
+    function dissolve() {
+      if (closing) return;
+      closing = true;
+      clearInterval(typing); clearTimeout(timer);
+      title.textContent = WELCOME_TITLE; text.textContent = WELCOME_TEXT;
+      if (still) { card.remove(); backdrop.remove(); return; }
+      const box = card.getBoundingClientRect();
+      for (let i = 0; i < 14; i++) {
+        const spark = document.createElement("span");
+        spark.className = "welcome-spark";
+        spark.style.left = box.left + Math.random() * box.width + "px";
+        spark.style.top = box.top + Math.random() * box.height + "px";
+        document.body.appendChild(spark);
+        spark.animate([
+          { opacity: 0, transform: "scale(.4)" },
+          { opacity: 1, transform: "scale(1)", offset: .3 },
+          { opacity: 0, transform: `translate(${(Math.random() - .5) * 60}px, ${-20 - Math.random() * 50}px) scale(.3)` }
+        ], { duration: 900 + Math.random() * 500, delay: Math.random() * 250, easing: "ease-out", fill: "both" })
+          .onfinish = () => spark.remove();
+      }
+      backdrop.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 1100, easing: "ease-in-out", fill: "forwards" })
+        .onfinish = () => backdrop.remove();
+      card.animate([
+        { opacity: 1, filter: "blur(0)", transform: "translate(-50%, -50%) scale(1)" },
+        { opacity: 0, filter: "blur(10px)", transform: "translate(-50%, calc(-50% - 16px)) scale(.94)" }
+      ], { duration: 900, easing: "ease-in", fill: "forwards" }).onfinish = () => {
+        card.remove();
+        document.dispatchEvent(new CustomEvent("dreamland:hop"));
+      };
+    }
+    card.addEventListener("click", dissolve);
+    backdrop.addEventListener("click", dissolve);
+
+    if (still) {
+      title.textContent = WELCOME_TITLE; text.textContent = WELCOME_TEXT;
+      timer = setTimeout(dissolve, 6000);
+      return;
+    }
+    backdrop.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: "ease-out" });
+    card.animate([
+      { opacity: 0, transform: "translate(-50%, calc(-50% + 22px)) scale(.8)" },
+      { opacity: 1, transform: "translate(-50%, calc(-50% - 4px)) scale(1.03)", offset: .7 },
+      { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }
+    ], { duration: 650, easing: "cubic-bezier(.2,.8,.3,1.2)" });
+    // Type the greeting, then hold it long enough to read before dissolving.
+    const full = WELCOME_TITLE + "\n" + WELCOME_TEXT;
+    let n = 0;
+    setTimeout(() => {
+      typing = setInterval(() => {
+        n = Math.min(full.length, n + 2);
+        const shown = full.slice(0, n).split("\n");
+        title.textContent = shown[0]; text.textContent = shown[1] || "";
+        if (n >= full.length) { clearInterval(typing); timer = setTimeout(dissolve, 3800); }
+      }, 28);
+    }, 450);
+  }
+
+  function initialize() {
+    const root = document.documentElement;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const stopped = () => reducedMotion.matches || root.classList.contains("decorations-paused");
+    welcome(reducedMotion);
+
+    // Drifting cells: CSS animates them; the layer sits behind all content.
+    const cells = document.createElement("div");
+    cells.className = "bg-cells";
+    cells.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement("span");
+      cell.className = "bg-cell";
+      cell.style.setProperty("--i", i);
+      cells.appendChild(cell);
+    }
+    document.body.prepend(cells);
+
+    // The mascot walks along the empty strip under the navigation pill.
+    const panel = document.querySelector(".navbar > .container-fluid, .navbar > .container");
+    const nav = panel && panel.querySelector(".navbar-nav");
+    if (!panel || !nav || !Element.prototype.animate) return;
+    const track = document.createElement("div");
+    track.className = "mascot-track";
+    track.setAttribute("aria-hidden", "true");
+    const mascot = document.createElement("div");
+    mascot.className = "mascot";
+    mascot.innerHTML = `<div class="mascot-hop"><div class="mascot-body">${mascotSvg("walker")}</div></div>`;
+    track.appendChild(mascot);
+    panel.appendChild(track);
+    const hop = mascot.querySelector(".mascot-hop");
+
+    function placeTrack() {
+      const p = panel.getBoundingClientRect(), n = nav.getBoundingClientRect();
+      track.style.left = Math.max(0, n.left - p.left) + "px";
+      track.style.width = Math.max(0, n.width) + "px";
+    }
+
+    let x = 40, dir = 1, pauseUntil = 0, nextHop = 0, last = null, frame = 0;
+    const speed = 34; // px per second
+
+    // Methylation-themed speech bubbles, with the odd friendly one.
+    const puffs = ["CH₃", "5mC", "CpG", "A·T", "G·C", "CH₃", "5mC", "CpG", "♥", "hi!"];
+    let lastPuff = "";
+    function puff() {
+      const bubble = document.createElement("span");
+      bubble.className = "mascot-puff";
+      let text;
+      do { text = puffs[Math.floor(Math.random() * puffs.length)]; } while (text === lastPuff);
+      bubble.textContent = lastPuff = text;
+      bubble.style.left = (x + 18 + dir * 32) + "px";
+      track.appendChild(bubble);
+      bubble.animate([
+        { opacity: 0, transform: "translate(-50%, 0) scale(.6)" },
+        { opacity: 1, transform: "translate(-50%, -4px) scale(1)", offset: .25 },
+        { opacity: 0, transform: `translate(${dir > 0 ? "0%" : "-100%"}, -10px) scale(.9)` }
+      ], { duration: 1400, easing: "ease-out" }).onfinish = () => bubble.remove();
+    }
+    function jump(height = 16) {
+      hop.animate([
+        { transform: "translateY(0) scale(1, 1)" },
+        { transform: "translateY(0) scale(1.12, .86)", offset: .12 },
+        { transform: `translateY(-${height}px) scale(.94, 1.08)`, offset: .45 },
+        { transform: "translateY(0) scale(1.1, .9)", offset: .82 },
+        { transform: "translateY(0) scale(1, 1)" }
+      ], { duration: 620, easing: "cubic-bezier(.3,.7,.4,1)" });
+      if (Math.random() < .7) puff();
+    }
+
+    function render() {
+      mascot.style.transform = `translateX(${x}px) scaleX(${dir})`;
+    }
+    function step(time) {
+      frame = 0;
+      if (stopped() || document.hidden) { last = null; mascot.classList.remove("is-walking"); return; }
+      const width = track.clientWidth - 36;
+      if (last !== null && width > 40) {
+        const dt = Math.min(time - last, 60) / 1000;
+        if (time < pauseUntil) {
+          mascot.classList.remove("is-walking");
+        } else {
+          mascot.classList.add("is-walking");
+          x += dir * speed * dt;
+          if (x <= 0 || x >= width) {
+            x = Math.min(Math.max(x, 0), width); dir = -dir;
+            pauseUntil = time + 700 + Math.random() * 900;
+          } else if (Math.random() < dt * .12) {
+            pauseUntil = time + 1200 + Math.random() * 1600; // stop and look around
+          }
+        }
+        if (time > nextHop) { jump(8 + Math.random() * 6); nextHop = time + 3500 + Math.random() * 5000; }
+        render();
+      }
+      if (last === null) nextHop = time + 2500;
+      last = time;
+      frame = requestAnimationFrame(step);
+    }
+    function update() {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0; last = null;
+      if (!stopped() && !document.hidden) frame = requestAnimationFrame(step);
+      else mascot.classList.remove("is-walking");
+    }
+
+    mascot.addEventListener("click", () => { jump(12); puff(); });
+    document.addEventListener("dreamland:hop", () => { if (!stopped()) { jump(14); puff(); } });
+    document.addEventListener("shown.bs.tab", event => {
+      if (event.target.closest(".navbar") && !stopped()) jump(11);
+    });
+    new MutationObserver(update).observe(root, { attributes: true, attributeFilter: ["class"] });
+    reducedMotion.addEventListener("change", update);
+    document.addEventListener("visibilitychange", update);
+    if ("ResizeObserver" in window) new ResizeObserver(placeTrack).observe(panel);
+    window.addEventListener("resize", placeTrack, { passive: true });
+    placeTrack(); render(); update();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize, { once: true });
+  else initialize();
+})();

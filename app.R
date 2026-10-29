@@ -26,6 +26,13 @@ ui <- navbarPage(
   ),
 
   header = tags$head(
+    # Outfit for the DreamlandDB wordmark (masthead and About title)
+    tags$link(rel = "preconnect", href = "https://fonts.googleapis.com"),
+    tags$link(rel = "preconnect", href = "https://fonts.gstatic.com", crossorigin = NA),
+    tags$link(
+      rel = "stylesheet",
+      href = "https://fonts.googleapis.com/css2?family=Outfit:wght@600&display=swap"
+    ),
     tags$link(
       rel = "stylesheet",
       type = "text/css",
